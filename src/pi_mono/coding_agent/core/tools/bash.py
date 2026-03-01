@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import asyncio
-import shlex
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any
 
 from pi_mono.agent.types import AgentTool, AgentToolResult
@@ -53,7 +52,7 @@ async def execute_bash(
             stdout_bytes, stderr_bytes = await asyncio.wait_for(
                 proc.communicate(), timeout=timeout
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             proc.kill()
             await proc.wait()
             return AgentToolResult(

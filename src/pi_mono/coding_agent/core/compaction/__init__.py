@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from typing import Any, Protocol
 
 from pi_mono.ai.types import AssistantMessage, Context, Message, Model, SimpleStreamOptions
@@ -38,8 +37,9 @@ class SummaryCompaction:
         recent_messages = messages[-keep_recent:]
 
         # Build summary request
-        from pi_mono.ai.types import UserMessage, TextContent
         import time
+
+        from pi_mono.ai.types import UserMessage
 
         summary_prompt = (
             "Summarize the following conversation concisely. "

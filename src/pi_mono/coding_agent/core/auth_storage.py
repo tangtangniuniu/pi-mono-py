@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pi_mono.coding_agent.config import CREDENTIALS_DIR
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class AuthStorage:

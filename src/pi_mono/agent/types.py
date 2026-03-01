@@ -1,27 +1,25 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Protocol, Callable, Awaitable, Literal, Union
-import asyncio
+from enum import StrEnum
+from typing import TYPE_CHECKING, Any, Literal, Protocol, Union
 
 from pi_mono.ai.types import (
-    AssistantMessage,
     AssistantMessageEvent,
-    Context,
     ImageContent,
     Message,
     Model,
-    SimpleStreamOptions,
     TextContent,
     ThinkingLevel,
-    Tool,
-    ToolCall,
     ToolResultMessage,
 )
 
+if TYPE_CHECKING:
+    import asyncio
+    from collections.abc import Awaitable, Callable
 
-class AgentThinkingLevel(str, Enum):
+
+class AgentThinkingLevel(StrEnum):
     """Agent-level thinking level (includes 'off')."""
     OFF = "off"
     MINIMAL = "minimal"

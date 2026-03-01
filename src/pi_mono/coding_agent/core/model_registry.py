@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pi_mono.ai.models import get_model, get_models, get_providers
-from pi_mono.ai.types import Model
+
+if TYPE_CHECKING:
+    from pi_mono.ai.types import Model
 
 
 class ModelRegistry:

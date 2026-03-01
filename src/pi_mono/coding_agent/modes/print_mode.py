@@ -1,17 +1,19 @@
 from __future__ import annotations
 
-import json
-import sys
-from typing import Any
+from typing import TYPE_CHECKING
 
 from rich.console import Console
 
 from pi_mono.agent.types import (
-    AgentEndEvent, AgentEvent, AgentStartEvent,
-    MessageEndEvent, MessageStartEvent, MessageUpdateEvent,
-    ToolExecutionEndEvent, ToolExecutionStartEvent, TurnEndEvent, TurnStartEvent,
+    AgentEvent,
+    MessageEndEvent,
+    MessageUpdateEvent,
+    ToolExecutionEndEvent,
+    ToolExecutionStartEvent,
 )
-from pi_mono.coding_agent.core.agent_session import AgentSession
+
+if TYPE_CHECKING:
+    from pi_mono.coding_agent.core.agent_session import AgentSession
 
 
 class PrintMode:

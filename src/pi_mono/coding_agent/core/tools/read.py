@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-import asyncio
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pi_mono.agent.types import AgentTool, AgentToolResult
 from pi_mono.ai.types import TextContent
+
+if TYPE_CHECKING:
+    import asyncio
 
 READ_TOOL_NAME = "read"
 READ_TOOL_DESCRIPTION = "Read file contents with optional line range."

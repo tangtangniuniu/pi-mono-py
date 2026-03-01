@@ -7,9 +7,11 @@ Mirrors the TypeScript ``ApiProvider`` interface from
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, AsyncIterator, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
     from pi_mono.ai.types import (
         AssistantMessageEvent,
         Context,

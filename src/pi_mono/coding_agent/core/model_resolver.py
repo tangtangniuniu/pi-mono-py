@@ -1,9 +1,13 @@
 from __future__ import annotations
 
-from pi_mono.ai.types import Model
+from typing import TYPE_CHECKING
+
 from pi_mono.coding_agent.config import DEFAULT_MODEL
-from pi_mono.coding_agent.core.model_registry import ModelRegistry
-from pi_mono.coding_agent.core.settings_manager import Settings
+
+if TYPE_CHECKING:
+    from pi_mono.ai.types import Model
+    from pi_mono.coding_agent.core.model_registry import ModelRegistry
+    from pi_mono.coding_agent.core.settings_manager import Settings
 
 
 class ModelResolver:

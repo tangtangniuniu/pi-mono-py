@@ -1,0 +1,40 @@
+# Pi Agent Settings
+# This file configures the Pi coding agent.
+# Place in .pi/settings.yaml at your project root or ~/.pi/settings.yaml for global settings.
+
+# Server configuration (for pi-server REST API)
+server:
+  host: "127.0.0.1"
+  port: 8080
+  cors_origins:
+    - "*"
+
+# Model configuration
+models:
+  # Default model to use when none specified
+  default: "claude-sonnet-4-20250514"
+  # Thinking level: off, minimal, low, medium, high, xhigh
+  thinking_level: "off"
+  # Maximum agent loop turns per message
+  max_turns: 100
+  # Custom model definitions (uncomment and modify as needed)
+  # custom:
+  #   - id: "local-llama"
+  #     provider: "ollama"
+  #     base_url: "http://localhost:11434/v1"
+  #     context_window: 128000
+  #     max_tokens: 4096
+
+# Extension system
+extensions:
+  enabled: true
+  # Additional extension directories (beyond .pi/extensions/)
+  # directories: []
+
+# Context management
+auto_compact: true
+compact_threshold: 80000  # tokens
+
+# UI preferences
+theme: "default"
+verbose: false

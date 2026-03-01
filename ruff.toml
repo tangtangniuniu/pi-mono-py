@@ -17,9 +17,18 @@ select = [
     "ASYNC",# flake8-async
 ]
 ignore = [
-    "E501",   # line too long (handled by formatter)
-    "B008",   # do not perform function calls in argument defaults (click uses this)
-    "SIM108", # use ternary operator (readability preference)
+    "E501",     # line too long (handled by formatter)
+    "B008",     # do not perform function calls in argument defaults (click uses this)
+    "SIM108",   # use ternary operator (readability preference)
+    "ASYNC240", # pathlib in async — acceptable for local file I/O
+    "UP007",    # Union[] vs X | Y — both valid, keep Union for clarity
+    "B023",     # loop variable binding — false positive in closures with asyncio.gather
+    "N814",     # camelcase alias — deliberate short alias for readability
+    "SIM102",   # collapsible if — sometimes clearer to nest
+    "PTH109",   # os.getcwd — fine for our usage
+    "TC001",    # type-checking-only import — conflicts with FastAPI/Pydantic runtime needs
+    "TC002",    # type-checking-only third-party import — same
+    "TC003",    # type-checking-only stdlib import — same
 ]
 
 [lint.isort]

@@ -7,18 +7,22 @@ registry and delegate to it.
 
 from __future__ import annotations
 
-from typing import AsyncIterator
+from typing import TYPE_CHECKING
 
 from pi_mono.ai.api_registry import get_api_provider
-from pi_mono.ai.types import (
-    AssistantMessage,
-    AssistantMessageEvent,
-    Context,
-    Model,
-    SimpleStreamOptions,
-    StreamOptions,
-)
 from pi_mono.ai.utils.event_stream import AssistantMessageEventStream
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
+
+    from pi_mono.ai.types import (
+        AssistantMessage,
+        AssistantMessageEvent,
+        Context,
+        Model,
+        SimpleStreamOptions,
+        StreamOptions,
+    )
 
 
 def _resolve_api_provider(api: str) -> object:
@@ -199,8 +203,14 @@ def _pipe_iterator_to_stream(
             # always see a terminal event.
             from pi_mono.ai.types import (
                 AssistantMessage as _AM,
+            )
+            from pi_mono.ai.types import (
                 Cost as _Cost,
+            )
+            from pi_mono.ai.types import (
                 ErrorEvent as _EE,
+            )
+            from pi_mono.ai.types import (
                 Usage as _Usage,
             )
 
@@ -241,4 +251,4 @@ def _pipe_iterator_to_stream(
             "stream() must be called from within a running asyncio event loop"
         ) from None
 
-    loop.create_task(_drain())
+    _task = loop.create_task(_drain())  # noqa: RUF006

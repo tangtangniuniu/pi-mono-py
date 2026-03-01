@@ -1,9 +1,12 @@
 from __future__ import annotations
 
-from typing import Callable, Awaitable
 import asyncio
+from typing import TYPE_CHECKING
 
-from pi_mono.agent.types import AgentEvent
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from pi_mono.agent.types import AgentEvent
 
 
 class EventBus:

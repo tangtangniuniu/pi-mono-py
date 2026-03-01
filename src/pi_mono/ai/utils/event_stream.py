@@ -7,12 +7,15 @@ Mirrors the TypeScript ``EventStream`` class from
 from __future__ import annotations
 
 import asyncio
-from typing import AsyncIterator, Callable, Generic, TypeVar
+from typing import TYPE_CHECKING, Generic, TypeVar
 
 from pi_mono.ai.types import (
     AssistantMessage,
     AssistantMessageEvent,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Callable
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -128,7 +131,7 @@ class EventStream(Generic[T, R]):
 class _IterResult(Generic[T]):
     """Small value-holder mirroring JS ``IteratorResult``."""
 
-    __slots__ = ("value", "done")
+    __slots__ = ("done", "value")
 
     def __init__(self, *, value: T | None, done: bool) -> None:
         self.value = value

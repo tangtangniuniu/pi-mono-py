@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Protocol
 
-from pi_mono.agent.types import AgentTool
 from pi_mono.coding_agent.config import EXTENSIONS_DIR
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    from pi_mono.agent.types import AgentTool
 
 
 class Extension(Protocol):

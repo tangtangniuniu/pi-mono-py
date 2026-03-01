@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import asyncio
-import stat
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pi_mono.agent.types import AgentTool, AgentToolResult
 from pi_mono.ai.types import TextContent
+
+if TYPE_CHECKING:
+    import asyncio
 
 LS_TOOL_NAME = "ls"
 LS_TOOL_DESCRIPTION = "List directory contents."

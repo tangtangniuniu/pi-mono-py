@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
 from pi_mono.coding_agent.config import SKILLS_DIR
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @dataclass

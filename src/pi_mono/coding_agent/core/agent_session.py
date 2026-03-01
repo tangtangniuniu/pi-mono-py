@@ -2,20 +2,26 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import Any, AsyncGenerator, Callable, Awaitable
+from typing import TYPE_CHECKING, Any
 
 from pi_mono.agent.agent import Agent
 from pi_mono.agent.types import (
-    AgentContext, AgentEndEvent, AgentEvent, AgentMessage, AgentThinkingLevel, AgentTool,
+    AgentEvent,
+    AgentThinkingLevel,
     MessageEndEvent,
 )
-from pi_mono.ai.types import Message, Model, UserMessage, TextContent
-from pi_mono.coding_agent.core.compaction import SummaryCompaction, CompactionStrategy
-from pi_mono.coding_agent.core.model_registry import ModelRegistry
+from pi_mono.coding_agent.core.compaction import CompactionStrategy, SummaryCompaction
+from pi_mono.coding_agent.core.extensions.loader import ExtensionLoader
+from pi_mono.coding_agent.core.extensions.runner import ExtensionRunner
 from pi_mono.coding_agent.core.model_resolver import ModelResolver
-from pi_mono.coding_agent.core.session_manager import SessionManager, MessageEntry
-from pi_mono.coding_agent.core.settings_manager import Settings, SettingsManager
+from pi_mono.coding_agent.core.session_manager import MessageEntry, SessionManager
 from pi_mono.coding_agent.core.tools import create_all_tools
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
+    from pi_mono.coding_agent.core.model_registry import ModelRegistry
+    from pi_mono.coding_agent.core.settings_manager import Settings, SettingsManager
 
 
 class AgentSession:
@@ -35,6 +41,7 @@ class AgentSession:
         self._model_resolver = ModelResolver(model_registry)
         self._compaction = compaction or SummaryCompaction(stream_fn=stream_fn)
         self._stream_fn = stream_fn
+        self._extension_runner: ExtensionRunner | None = None
 
         self._agent: Agent | None = None
         self._session_id: str | None = None
@@ -71,6 +78,18 @@ class AgentSession:
 
         # Create tools
         tools = create_all_tools()
+        builtin_names = {t.name for t in tools}
+
+        # Load extensions
+        loader = ExtensionLoader()
+        loaded = loader.load_all()
+        self._extension_runner = ExtensionRunner(builtin_tool_names=builtin_names)
+        for ext in loaded:
+            self._extension_runner.add_extension(ext.source_id, ext.api)
+
+        # Merge extension tools
+        ext_tools = self._extension_runner.get_all_tools()
+        all_tools = tools + ext_tools
 
         # Create agent
         self._agent = Agent(
@@ -81,7 +100,7 @@ class AgentSession:
         )
         self._agent.set_model(resolved_model)
         self._agent.set_thinking_level(agent_thinking)
-        self._agent.set_tools(tools)
+        self._agent.set_tools(all_tools)
 
     async def send_message(self, content: str) -> AsyncGenerator[AgentEvent, None]:
         if self._agent is None:

@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-import json
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+import yaml
 from pydantic import BaseModel, Field
 
-from pi_mono.ai.types import ThinkingLevel
 from pi_mono.coding_agent.config import DEFAULT_COMPACT_THRESHOLD, DEFAULT_MAX_TURNS, DEFAULT_MODEL, SETTINGS_FILE
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class Settings(BaseModel):
@@ -23,9 +24,11 @@ class Settings(BaseModel):
     custom_api_urls: dict[str, str] = Field(default_factory=dict)
     custom_headers: dict[str, dict[str, str]] = Field(default_factory=dict)
 
+    model_config = {"extra": "ignore"}
+
 
 class SettingsManager:
-    """Manages user settings with JSON file persistence."""
+    """Manages user settings with YAML file persistence."""
 
     def __init__(self, settings_file: Path | None = None) -> None:
         self._settings_file = settings_file or SETTINGS_FILE
@@ -37,7 +40,10 @@ class SettingsManager:
 
         if self._settings_file.exists():
             try:
-                data = json.loads(self._settings_file.read_text(encoding="utf-8"))
+                text = self._settings_file.read_text(encoding="utf-8")
+                data = yaml.safe_load(text)
+                if data is None:
+                    data = {}
                 self._settings = Settings.model_validate(data)
             except Exception:
                 self._settings = Settings()
@@ -49,8 +55,9 @@ class SettingsManager:
     async def save(self, settings: Settings) -> None:
         self._settings = settings
         self._settings_file.parent.mkdir(parents=True, exist_ok=True)
+        data = settings.model_dump()
         self._settings_file.write_text(
-            settings.model_dump_json(indent=2),
+            yaml.dump(data, default_flow_style=False, allow_unicode=True),
             encoding="utf-8",
         )
 

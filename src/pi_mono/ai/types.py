@@ -6,10 +6,11 @@ All value objects are frozen dataclasses (immutable).
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
-from typing import Any, Literal, Union
+from typing import TYPE_CHECKING, Any, Literal, Union
 
+if TYPE_CHECKING:
+    import asyncio
 
 # ---------------------------------------------------------------------------
 # Literal type aliases
@@ -119,13 +120,13 @@ class ToolCall:
 Content = Union[TextContent, ThinkingContent, ImageContent, ToolCall]
 """Union of all content block types."""
 
-UserContent = Union[str, list[Union[TextContent, ImageContent]]]
+UserContent = Union[str, list[TextContent | ImageContent]]
 """Content that can appear in a user message: plain string or mixed text/image blocks."""
 
-AssistantContent = list[Union[TextContent, ThinkingContent, ToolCall]]
+AssistantContent = list[TextContent | ThinkingContent | ToolCall]
 """Content that can appear in an assistant message."""
 
-ToolResultContent = list[Union[TextContent, ImageContent]]
+ToolResultContent = list[TextContent | ImageContent]
 """Content that can appear in a tool result message."""
 
 

@@ -1,22 +1,21 @@
 from __future__ import annotations
 
-import asyncio
-from typing import Any
+from typing import TYPE_CHECKING
 
 from rich.console import Console
-from rich.live import Live
-from rich.markdown import Markdown
 from rich.panel import Panel
 from rich.prompt import Prompt
-from rich.text import Text
 
 from pi_mono.agent.types import (
-    AgentEndEvent, AgentEvent, AgentStartEvent,
-    MessageEndEvent, MessageStartEvent, MessageUpdateEvent,
-    ToolExecutionEndEvent, ToolExecutionStartEvent,
-    ToolExecutionUpdateEvent, TurnEndEvent, TurnStartEvent,
+    AgentEvent,
+    MessageEndEvent,
+    MessageUpdateEvent,
+    ToolExecutionEndEvent,
+    ToolExecutionStartEvent,
 )
-from pi_mono.coding_agent.core.agent_session import AgentSession
+
+if TYPE_CHECKING:
+    from pi_mono.coding_agent.core.agent_session import AgentSession
 
 
 class InteractiveMode:
@@ -117,10 +116,9 @@ class InteractiveMode:
 
         elif isinstance(event, MessageEndEvent):
             msg = event.message
-            if hasattr(msg, 'role') and msg.role == "assistant":
-                if self._current_text:
-                    print()  # Newline after streaming
-                    self._current_text = ""
+            if hasattr(msg, 'role') and msg.role == "assistant" and self._current_text:
+                print()  # Newline after streaming
+                self._current_text = ""
 
         elif isinstance(event, ToolExecutionStartEvent):
             self._console.print(f"\n[yellow]⚡ {event.tool_name}[/yellow]", end="")
@@ -131,6 +129,6 @@ class InteractiveMode:
 
         elif isinstance(event, ToolExecutionEndEvent):
             if event.is_error:
-                self._console.print(f"[red]  ✗ Error[/red]")
+                self._console.print("[red]  ✗ Error[/red]")
             elif self._verbose:
-                self._console.print(f"[green]  ✓ Done[/green]")
+                self._console.print("[green]  ✓ Done[/green]")

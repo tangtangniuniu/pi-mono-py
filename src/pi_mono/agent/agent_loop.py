@@ -10,16 +10,9 @@ from __future__ import annotations
 import asyncio
 import inspect
 import time
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
-from pi_mono.ai.stream import stream_simple as default_stream_fn
-from pi_mono.ai.types import (
-    Context,
-    TextContent,
-    ToolResultMessage,
-)
-from pi_mono.ai.utils.event_stream import EventStream
-from pi_mono.ai.utils.validation import validate_tool_arguments
 from pi_mono.agent.types import (
     AgentContext,
     AgentEndEvent,
@@ -38,10 +31,17 @@ from pi_mono.agent.types import (
     TurnEndEvent,
     TurnStartEvent,
 )
+from pi_mono.ai.stream import stream_simple as default_stream_fn
+from pi_mono.ai.types import (
+    Context,
+    TextContent,
+    ToolResultMessage,
+)
+from pi_mono.ai.utils.event_stream import EventStream
+from pi_mono.ai.utils.validation import validate_tool_arguments
 
 if TYPE_CHECKING:
-    from pi_mono.ai.types import AssistantMessage, AssistantMessageEvent, Tool
-    from pi_mono.ai.utils.event_stream import AssistantMessageEventStream
+    from pi_mono.ai.types import AssistantMessage, Tool
 
 # Type alias for the stream function signature.
 # Matches ``stream_simple(model, context, options) -> AssistantMessageEventStream``.
@@ -308,7 +308,7 @@ async def _stream_assistant_response(
 
     This is where ``AgentMessage[]`` is transformed to ``Message[]`` for the LLM.
     """
-    from pi_mono.ai.types import AssistantMessage, SimpleStreamOptions, ThinkingBudgets, Tool
+    from pi_mono.ai.types import SimpleStreamOptions, ThinkingBudgets, Tool
 
     # Apply context transform if configured (AgentMessage[] -> AgentMessage[])
     messages = context.messages

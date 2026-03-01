@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import shutil
-from pathlib import Path
 from typing import Any
 
 from pi_mono.agent.types import AgentTool, AgentToolResult
@@ -60,7 +59,7 @@ async def execute_grep(
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
-        stdout_bytes, stderr_bytes = await asyncio.wait_for(proc.communicate(), timeout=30)
+        stdout_bytes, _stderr_bytes = await asyncio.wait_for(proc.communicate(), timeout=30)
 
         stdout = stdout_bytes.decode("utf-8", errors="replace")
 
@@ -78,7 +77,7 @@ async def execute_grep(
             content=[TextContent(text=stdout)],
             details={"matches": stdout.count("\n")},
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         return AgentToolResult(
             content=[TextContent(text="Search timed out after 30s")],
             details={"error": "timeout"},

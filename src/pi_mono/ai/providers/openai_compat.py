@@ -7,11 +7,12 @@ streaming, tool calls, thinking/reasoning content, and images.
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import time
 from dataclasses import dataclass, field
-from typing import Any, AsyncIterator, Literal
+from typing import TYPE_CHECKING, Any
 
 from openai import AsyncOpenAI
 
@@ -52,6 +53,8 @@ from pi_mono.ai.types import (
     UserMessage,
 )
 
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator
 
 # ---------------------------------------------------------------------------
 # Provider-specific options
@@ -112,12 +115,11 @@ def _has_tool_history(messages: list[Any]) -> bool:
     for msg in messages:
         if isinstance(msg, ToolResultMessage):
             return True
-        if isinstance(msg, AssistantMessage):
-            if any(
-                isinstance(b, ToolCall) or (hasattr(b, "type") and b.type == "toolCall")
-                for b in msg.content
-            ):
-                return True
+        if isinstance(msg, AssistantMessage) and any(
+            isinstance(b, ToolCall) or (hasattr(b, "type") and b.type == "toolCall")
+            for b in msg.content
+        ):
+            return True
     return False
 
 
@@ -403,10 +405,8 @@ def _convert_messages(
                 reasoning_details = []
                 for tc in tool_calls:
                     if tc.thought_signature:
-                        try:
+                        with contextlib.suppress(json.JSONDecodeError):
                             reasoning_details.append(json.loads(tc.thought_signature))
-                        except json.JSONDecodeError:
-                            pass
                 if reasoning_details:
                     assistant_msg["reasoning_details"] = reasoning_details
 

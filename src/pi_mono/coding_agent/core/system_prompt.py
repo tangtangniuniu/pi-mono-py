@@ -3,11 +3,11 @@ from __future__ import annotations
 import os
 import platform
 import subprocess
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 
-from pi_mono.agent.types import AgentTool
-from pi_mono.ai.types import Tool
+if TYPE_CHECKING:
+    from pi_mono.agent.types import AgentTool
 
 
 def build_system_prompt(
@@ -25,7 +25,7 @@ def build_system_prompt(
     cwd = (context or {}).get("cwd", os.getcwd())
     parts.append(f"Working directory: {cwd}")
     parts.append(f"Platform: {platform.system().lower()}")
-    parts.append(f"Date: {datetime.now(timezone.utc).strftime('%Y-%m-%d')}")
+    parts.append(f"Date: {datetime.now(UTC).strftime('%Y-%m-%d')}")
 
     # Git info
     git_branch = (context or {}).get("git_branch")

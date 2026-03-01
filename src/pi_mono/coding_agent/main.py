@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import asyncio
 import sys
-from typing import Any
 
 from rich.console import Console
 from rich.table import Table
@@ -12,7 +10,6 @@ from pi_mono.coding_agent.core.agent_session import AgentSession
 from pi_mono.coding_agent.core.model_registry import ModelRegistry
 from pi_mono.coding_agent.core.session_manager import SessionManager
 from pi_mono.coding_agent.core.settings_manager import SettingsManager
-
 
 console = Console()
 

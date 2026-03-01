@@ -9,18 +9,8 @@ from __future__ import annotations
 
 import asyncio
 import time
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
-from pi_mono.ai.types import (
-    AssistantMessage,
-    Cost,
-    ImageContent,
-    Message,
-    Model,
-    TextContent,
-    Usage,
-    UserMessage,
-)
 from pi_mono.agent.agent_loop import agent_loop, agent_loop_continue
 from pi_mono.agent.types import (
     AgentContext,
@@ -38,6 +28,19 @@ from pi_mono.agent.types import (
     ToolExecutionStartEvent,
     TurnEndEvent,
 )
+from pi_mono.ai.types import (
+    AssistantMessage,
+    Cost,
+    ImageContent,
+    Message,
+    Model,
+    TextContent,
+    Usage,
+    UserMessage,
+)
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def _default_convert_to_llm(messages: list[AgentMessage]) -> list[Message]:
@@ -457,10 +460,7 @@ class Agent:
 
             async for event in event_stream:
                 # Update internal state based on events
-                if isinstance(event, MessageStartEvent):
-                    partial = event.message
-                    self._state.stream_message = event.message
-                elif isinstance(event, MessageUpdateEvent):
+                if isinstance(event, (MessageStartEvent, MessageUpdateEvent)):
                     partial = event.message
                     self._state.stream_message = event.message
                 elif isinstance(event, MessageEndEvent):

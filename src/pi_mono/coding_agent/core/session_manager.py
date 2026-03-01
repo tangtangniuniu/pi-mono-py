@@ -3,13 +3,14 @@ from __future__ import annotations
 import json
 import time
 import uuid
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from pydantic import BaseModel
 
 from pi_mono.coding_agent.config import SESSIONS_DIR
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class SessionEntry(BaseModel):

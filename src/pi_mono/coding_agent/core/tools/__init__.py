@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from pi_mono.agent.types import AgentTool
 from pi_mono.coding_agent.core.tools.bash import create_bash_tool
 from pi_mono.coding_agent.core.tools.edit import create_edit_tool
 from pi_mono.coding_agent.core.tools.find import create_find_tool
@@ -18,16 +19,16 @@ ALL_TOOLS = [
     create_ls_tool,
 ]
 
-def create_all_tools():
+def create_all_tools() -> list[AgentTool]:
     return [fn() for fn in ALL_TOOLS]
 
 __all__ = [
+    "create_all_tools",
     "create_bash_tool",
+    "create_edit_tool",
+    "create_find_tool",
+    "create_grep_tool",
+    "create_ls_tool",
     "create_read_tool",
     "create_write_tool",
-    "create_edit_tool",
-    "create_grep_tool",
-    "create_find_tool",
-    "create_ls_tool",
-    "create_all_tools",
 ]
