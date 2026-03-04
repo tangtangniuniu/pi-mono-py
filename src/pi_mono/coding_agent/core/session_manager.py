@@ -15,18 +15,21 @@ if TYPE_CHECKING:
 
 class SessionEntry(BaseModel):
     """Base session entry."""
+
     type: str
     timestamp: float
 
 
 class MessageEntry(SessionEntry):
     """A message in the session."""
+
     type: Literal["message"] = "message"
     message: dict[str, Any]
 
 
 class ToolUseEntry(SessionEntry):
     """A tool use in the session."""
+
     type: Literal["tool_use"] = "tool_use"
     tool_name: str
     tool_call_id: str
@@ -35,6 +38,7 @@ class ToolUseEntry(SessionEntry):
 
 class ToolResultEntry(SessionEntry):
     """A tool result in the session."""
+
     type: Literal["tool_result"] = "tool_result"
     tool_call_id: str
     content: str
@@ -43,6 +47,7 @@ class ToolResultEntry(SessionEntry):
 
 class MetadataEntry(SessionEntry):
     """Session metadata."""
+
     type: Literal["metadata"] = "metadata"
     key: str
     value: Any
@@ -50,6 +55,7 @@ class MetadataEntry(SessionEntry):
 
 class SessionSummary(BaseModel):
     """Summary of a session for listing."""
+
     session_id: str
     name: str | None = None
     created_at: float
@@ -132,14 +138,16 @@ class SessionManager:
                     elif isinstance(entry, MessageEntry):
                         msg_count += 1
 
-                summaries.append(SessionSummary(
-                    session_id=session_id,
-                    name=name,
-                    created_at=created_at,
-                    updated_at=updated_at,
-                    message_count=msg_count,
-                    model=model,
-                ))
+                summaries.append(
+                    SessionSummary(
+                        session_id=session_id,
+                        name=name,
+                        created_at=created_at,
+                        updated_at=updated_at,
+                        message_count=msg_count,
+                        model=model,
+                    )
+                )
             except Exception:
                 continue
         return summaries

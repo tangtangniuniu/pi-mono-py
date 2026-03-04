@@ -14,6 +14,7 @@ DEFAULT_MODEL = "claude-sonnet-4-20250514"
 DEFAULT_MAX_TURNS = 100
 DEFAULT_COMPACT_THRESHOLD = 80_000  # tokens
 
+
 def ensure_dirs() -> None:
     """Create required directories if they don't exist."""
     for d in (CONFIG_DIR, SESSIONS_DIR, CREDENTIALS_DIR):

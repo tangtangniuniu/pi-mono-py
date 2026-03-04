@@ -25,7 +25,8 @@ class AuthStorage:
             return None
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-            return data.get("api_key")
+            value = data.get("api_key")
+            return str(value) if value is not None else None
         except Exception:
             return None
 

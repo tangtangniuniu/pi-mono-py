@@ -67,11 +67,12 @@ async def execute_ls(
         )
 
 
-def _format_size(size: int) -> str:
+def _format_size(size_bytes: int) -> str:
+    size: float = float(size_bytes)
     for unit in ("B", "KB", "MB", "GB"):
         if size < 1024:
-            return f"{size:>8.1f} {unit}" if unit != "B" else f"{size:>8d} {unit}"
-        size /= 1024
+            return f"{size:>8.1f} {unit}" if unit != "B" else f"{int(size):>8d} {unit}"
+        size = size / 1024
     return f"{size:>8.1f} TB"
 
 

@@ -29,10 +29,12 @@ class InteractiveMode:
 
     async def run(self) -> None:
         """Main REPL loop."""
-        self._console.print(Panel(
-            "[bold]Pi Coding Agent[/bold]\nType your message or /help for commands. Ctrl+C to exit.",
-            border_style="blue",
-        ))
+        self._console.print(
+            Panel(
+                "[bold]Pi Coding Agent[/bold]\nType your message or /help for commands. Ctrl+C to exit.",
+                border_style="blue",
+            )
+        )
 
         while True:
             try:
@@ -62,16 +64,18 @@ class InteractiveMode:
         cmd = command.strip().lower()
 
         if cmd == "/help":
-            self._console.print(Panel(
-                "/help     — Show this help\n"
-                "/model    — Show/switch model\n"
-                "/session  — Show session info\n"
-                "/compact  — Compact conversation\n"
-                "/clear    — Clear conversation\n"
-                "/exit     — Exit",
-                title="Commands",
-                border_style="cyan",
-            ))
+            self._console.print(
+                Panel(
+                    "/help     — Show this help\n"
+                    "/model    — Show/switch model\n"
+                    "/session  — Show session info\n"
+                    "/compact  — Compact conversation\n"
+                    "/clear    — Clear conversation\n"
+                    "/exit     — Exit",
+                    title="Commands",
+                    border_style="cyan",
+                )
+            )
             return True
 
         elif cmd == "/exit" or cmd == "/quit":
@@ -107,16 +111,16 @@ class InteractiveMode:
     def _handle_event(self, event: AgentEvent) -> None:
         if isinstance(event, MessageUpdateEvent):
             msg = event.message
-            if hasattr(msg, 'content') and isinstance(msg.content, list):
+            if hasattr(msg, "content") and isinstance(msg.content, list):
                 # Print streaming text
                 ae = event.assistant_message_event
-                if hasattr(ae, 'type') and ae.type == "text_delta" and hasattr(ae, 'delta'):
+                if hasattr(ae, "type") and ae.type == "text_delta" and hasattr(ae, "delta"):
                     self._console.print(ae.delta, end="")
                     self._current_text += ae.delta
 
         elif isinstance(event, MessageEndEvent):
             msg = event.message
-            if hasattr(msg, 'role') and msg.role == "assistant" and self._current_text:
+            if hasattr(msg, "role") and msg.role == "assistant" and self._current_text:
                 print()  # Newline after streaming
                 self._current_text = ""
 

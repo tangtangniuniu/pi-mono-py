@@ -58,7 +58,11 @@ async def execute_edit(
 
         if not replace_all and count > 1:
             return AgentToolResult(
-                content=[TextContent(text=f"Error: old_string found {count} times. Use replace_all=true or provide more context.")],
+                content=[
+                    TextContent(
+                        text=f"Error: old_string found {count} times. Use replace_all=true or provide more context."
+                    )
+                ],
                 details={"error": "ambiguous", "count": count},
             )
 
@@ -70,7 +74,9 @@ async def execute_edit(
         file_path.write_text(new_content, encoding="utf-8")
 
         return AgentToolResult(
-            content=[TextContent(text=f"Successfully edited {file_path} ({count} replacement{'s' if count > 1 else ''})")],
+            content=[
+                TextContent(text=f"Successfully edited {file_path} ({count} replacement{'s' if count > 1 else ''})")
+            ],
             details={"path": str(file_path), "replacements": count},
         )
     except Exception as e:

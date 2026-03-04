@@ -23,6 +23,7 @@ async def event_stream_generator(
         data: <json>
     """
     from pi_mono.server.app import get_session_registry
+
     registry = get_session_registry()
     session = registry.get(session_id)
     if session is None or session.agent is None:

@@ -13,13 +13,17 @@ import type { Attachment } from "../utils/attachment-utils.js";
 import { formatUsage } from "../utils/format.js";
 import { i18n } from "../utils/i18n.js";
 import { createStreamFn } from "../utils/proxy-utils.js";
+import type { RestAgentClient } from "../utils/rest-agent-client.js";
 import type { UserMessageWithAttachments } from "./Messages.js";
 import type { StreamingMessageContainer } from "./StreamingMessageContainer.js";
+
+/** The session can be either a direct Agent instance or a REST client. */
+export type AgentSession = Agent | RestAgentClient;
 
 @customElement("agent-interface")
 export class AgentInterface extends LitElement {
 	// Optional external session: when provided, this component becomes a view over the session
-	@property({ attribute: false }) session?: Agent;
+	@property({ attribute: false }) session?: AgentSession;
 	@property({ type: Boolean }) enableAttachments = true;
 	@property({ type: Boolean }) enableModelSelector = true;
 	@property({ type: Boolean }) enableThinkingSelector = true;
@@ -125,6 +129,10 @@ export class AgentInterface extends LitElement {
 		}
 	}
 
+	private _isDirectAgent(session: AgentSession): session is Agent {
+		return "streamFn" in session;
+	}
+
 	private setupSessionSubscription() {
 		if (this._unsubscribeSession) {
 			this._unsubscribeSession();
@@ -132,20 +140,22 @@ export class AgentInterface extends LitElement {
 		}
 		if (!this.session) return;
 
-		// Set default streamFn with proxy support if not already set
-		if (this.session.streamFn === streamSimple) {
-			this.session.streamFn = createStreamFn(async () => {
-				const enabled = await getAppStorage().settings.get<boolean>("proxy.enabled");
-				return enabled ? (await getAppStorage().settings.get<string>("proxy.url")) || undefined : undefined;
-			});
-		}
+		// Set default streamFn with proxy support only for direct Agent mode
+		if (this._isDirectAgent(this.session)) {
+			if (this.session.streamFn === streamSimple) {
+				this.session.streamFn = createStreamFn(async () => {
+					const enabled = await getAppStorage().settings.get<boolean>("proxy.enabled");
+					return enabled ? (await getAppStorage().settings.get<string>("proxy.url")) || undefined : undefined;
+				});
+			}
 
-		// Set default getApiKey if not already set
-		if (!this.session.getApiKey) {
-			this.session.getApiKey = async (provider: string) => {
-				const key = await getAppStorage().providerKeys.get(provider);
-				return key ?? undefined;
-			};
+			// Set default getApiKey if not already set
+			if (!this.session.getApiKey) {
+				this.session.getApiKey = async (provider: string) => {
+					const key = await getAppStorage().providerKeys.get(provider);
+					return key ?? undefined;
+				};
+			}
 		}
 
 		this._unsubscribeSession = this.session.subscribe(async (ev: AgentEvent) => {
@@ -209,22 +219,24 @@ export class AgentInterface extends LitElement {
 		if (!session) throw new Error("No session set on AgentInterface");
 		if (!session.state.model) throw new Error("No model set on AgentInterface");
 
-		// Check if API key exists for the provider (only needed in direct mode)
-		const provider = session.state.model.provider;
-		const apiKey = await getAppStorage().providerKeys.get(provider);
+		// Check if API key exists for the provider (only needed in direct Agent mode)
+		if (this._isDirectAgent(session)) {
+			const provider = session.state.model.provider;
+			const apiKey = await getAppStorage().providerKeys.get(provider);
 
-		// If no API key, prompt for it
-		if (!apiKey) {
-			if (!this.onApiKeyRequired) {
-				console.error("No API key configured and no onApiKeyRequired handler set");
-				return;
-			}
+			// If no API key, prompt for it
+			if (!apiKey) {
+				if (!this.onApiKeyRequired) {
+					console.error("No API key configured and no onApiKeyRequired handler set");
+					return;
+				}
 
-			const success = await this.onApiKeyRequired(provider);
+				const success = await this.onApiKeyRequired(provider);
 
-			// If still no API key, abort the send
-			if (!success) {
-				return;
+				// If still no API key, abort the send
+				if (!success) {
+					return;
+				}
 			}
 		}
 

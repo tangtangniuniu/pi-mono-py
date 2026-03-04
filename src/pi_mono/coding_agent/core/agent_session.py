@@ -165,7 +165,7 @@ class AgentSession:
             return
 
         compacted = await self._compaction.compact(
-            messages=[m for m in messages if hasattr(m, 'role')],
+            messages=[m for m in messages if hasattr(m, "role")],
             model=model,
             system_prompt=self._agent.state.system_prompt,
         )
@@ -186,14 +186,14 @@ class AgentSession:
 
 def _serialize_message(msg: Any) -> dict[str, Any]:
     """Serialize an AgentMessage to dict for JSONL storage."""
-    if hasattr(msg, '__dict__'):
+    if hasattr(msg, "__dict__"):
         result: dict[str, Any] = {}
         for k, v in msg.__dict__.items():
-            if not k.startswith('_'):
-                if hasattr(v, '__dict__'):
+            if not k.startswith("_"):
+                if hasattr(v, "__dict__"):
                     result[k] = _serialize_message(v)
                 elif isinstance(v, list):
-                    result[k] = [_serialize_message(item) if hasattr(item, '__dict__') else item for item in v]
+                    result[k] = [_serialize_message(item) if hasattr(item, "__dict__") else item for item in v]
                 else:
                     result[k] = v
         return result

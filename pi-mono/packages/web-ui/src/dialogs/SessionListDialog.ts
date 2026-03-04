@@ -6,6 +6,7 @@ import { getAppStorage } from "../storage/app-storage.js";
 import type { SessionMetadata } from "../storage/types.js";
 import { formatUsage } from "../utils/format.js";
 import { i18n } from "../utils/i18n.js";
+import { getRestDataService, isRestMode } from "../utils/rest-data-service.js";
 
 @customElement("session-list-dialog")
 export class SessionListDialog extends DialogBase {
@@ -31,8 +32,13 @@ export class SessionListDialog extends DialogBase {
 	private async loadSessions() {
 		this.loading = true;
 		try {
-			const storage = getAppStorage();
-			this.sessions = await storage.sessions.getAllMetadata();
+			if (isRestMode()) {
+				const service = getRestDataService()!;
+				this.sessions = await service.getAllSessionMetadata();
+			} else {
+				const storage = getAppStorage();
+				this.sessions = await storage.sessions.getAllMetadata();
+			}
 		} catch (err) {
 			console.error("Failed to load sessions:", err);
 			this.sessions = [];
@@ -49,10 +55,14 @@ export class SessionListDialog extends DialogBase {
 		}
 
 		try {
-			const storage = getAppStorage();
-			if (!storage.sessions) return;
-
-			await storage.sessions.deleteSession(sessionId);
+			if (isRestMode()) {
+				const service = getRestDataService()!;
+				await service.deleteSession(sessionId);
+			} else {
+				const storage = getAppStorage();
+				if (!storage.sessions) return;
+				await storage.sessions.deleteSession(sessionId);
+			}
 			await this.loadSessions();
 
 			// Track deleted session

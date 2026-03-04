@@ -13,6 +13,7 @@ router = APIRouter(tags=["models"])
 
 def _get_registry() -> tuple[SessionRegistry, ModelRegistry]:
     from pi_mono.server.app import get_model_registry, get_session_registry
+
     return get_session_registry(), get_model_registry()
 
 
@@ -43,6 +44,7 @@ async def set_thinking(session_id: str, req: SetThinkingRequest) -> dict[str, st
         raise HTTPException(status_code=400, detail="Agent not initialized")
 
     from pi_mono.agent.types import AgentThinkingLevel
+
     level = AgentThinkingLevel(req.level) if req.level != "off" else AgentThinkingLevel.OFF
     session.agent.set_thinking_level(level)
     return {"status": "ok", "thinking_level": req.level}

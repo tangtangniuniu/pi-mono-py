@@ -36,7 +36,8 @@ class ExtensionRunner:
                 if tool.name in self._builtin_tool_names:
                     logger.warning(
                         "Extension %s tool '%s' conflicts with built-in — skipped",
-                        source_id, tool.name,
+                        source_id,
+                        tool.name,
                     )
                     continue
                 tools.append(tool)
@@ -54,5 +55,7 @@ class ExtensionRunner:
                         handler(event)
                 except Exception:
                     logger.warning(
-                        "Error in event handler for %s", event_type, exc_info=True,
+                        "Error in event handler for %s",
+                        event_type,
+                        exc_info=True,
                     )

@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 
 class AgentThinkingLevel(StrEnum):
     """Agent-level thinking level (includes 'off')."""
+
     OFF = "off"
     MINIMAL = "minimal"
     LOW = "low"
@@ -37,12 +38,14 @@ AgentMessage = Union[Message, Any]  # Apps can use Any for custom message types
 @dataclass
 class AgentToolResult:
     """Result of a tool execution."""
+
     content: list[TextContent | ImageContent]
     details: Any = None
 
 
 class ToolExecutor(Protocol):
     """Protocol for tool execution."""
+
     async def execute(
         self,
         tool_call_id: str,
@@ -56,6 +59,7 @@ class ToolExecutor(Protocol):
 @dataclass
 class AgentTool:
     """An executable tool with schema and execute function."""
+
     name: str
     description: str
     label: str
@@ -66,6 +70,7 @@ class AgentTool:
 @dataclass
 class AgentContext:
     """Agent context with system prompt, messages, and tools."""
+
     system_prompt: str
     messages: list[AgentMessage]
     tools: list[AgentTool] | None = None
@@ -74,6 +79,7 @@ class AgentContext:
 @dataclass
 class AgentLoopConfig:
     """Configuration for the agent loop."""
+
     model: Model
     convert_to_llm: Callable[[list[AgentMessage]], list[Message] | Awaitable[list[Message]]]
     reasoning: ThinkingLevel | None = None
@@ -96,6 +102,7 @@ class AgentLoopConfig:
 @dataclass
 class AgentState:
     """Agent state containing all configuration and conversation data."""
+
     system_prompt: str = ""
     model: Model | None = None
     thinking_level: AgentThinkingLevel = AgentThinkingLevel.OFF
@@ -112,14 +119,17 @@ class AgentState:
 class AgentStartEvent:
     type: Literal["agent_start"] = "agent_start"
 
+
 @dataclass(frozen=True)
 class AgentEndEvent:
     messages: list[AgentMessage]
     type: Literal["agent_end"] = "agent_end"
 
+
 @dataclass(frozen=True)
 class TurnStartEvent:
     type: Literal["turn_start"] = "turn_start"
+
 
 @dataclass(frozen=True)
 class TurnEndEvent:
@@ -127,10 +137,12 @@ class TurnEndEvent:
     tool_results: list[ToolResultMessage]
     type: Literal["turn_end"] = "turn_end"
 
+
 @dataclass(frozen=True)
 class MessageStartEvent:
     message: AgentMessage
     type: Literal["message_start"] = "message_start"
+
 
 @dataclass(frozen=True)
 class MessageUpdateEvent:
@@ -138,10 +150,12 @@ class MessageUpdateEvent:
     assistant_message_event: AssistantMessageEvent
     type: Literal["message_update"] = "message_update"
 
+
 @dataclass(frozen=True)
 class MessageEndEvent:
     message: AgentMessage
     type: Literal["message_end"] = "message_end"
+
 
 @dataclass(frozen=True)
 class ToolExecutionStartEvent:
@@ -149,6 +163,7 @@ class ToolExecutionStartEvent:
     tool_name: str
     args: Any
     type: Literal["tool_execution_start"] = "tool_execution_start"
+
 
 @dataclass(frozen=True)
 class ToolExecutionUpdateEvent:
@@ -158,6 +173,7 @@ class ToolExecutionUpdateEvent:
     partial_result: Any
     type: Literal["tool_execution_update"] = "tool_execution_update"
 
+
 @dataclass(frozen=True)
 class ToolExecutionEndEvent:
     tool_call_id: str
@@ -165,6 +181,7 @@ class ToolExecutionEndEvent:
     result: Any
     is_error: bool
     type: Literal["tool_execution_end"] = "tool_execution_end"
+
 
 AgentEvent = Union[
     AgentStartEvent,

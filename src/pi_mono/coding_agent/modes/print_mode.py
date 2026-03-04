@@ -33,17 +33,17 @@ class PrintMode:
         if isinstance(event, MessageUpdateEvent):
             # Stream text deltas to stdout
             msg = event.message
-            if hasattr(msg, 'content') and isinstance(msg.content, list):
+            if hasattr(msg, "content") and isinstance(msg.content, list):
                 for content in msg.content:
-                    if hasattr(content, 'text') and hasattr(content, 'type') and content.type == "text":
+                    if hasattr(content, "text") and hasattr(content, "type") and content.type == "text":
                         pass  # Text is accumulated, print at end
 
         elif isinstance(event, MessageEndEvent):
             msg = event.message
-            if hasattr(msg, 'role') and msg.role == "assistant":
-                if hasattr(msg, 'content') and isinstance(msg.content, list):
+            if hasattr(msg, "role") and msg.role == "assistant":
+                if hasattr(msg, "content") and isinstance(msg.content, list):
                     for content in msg.content:
-                        if hasattr(content, 'text') and hasattr(content, 'type') and content.type == "text":
+                        if hasattr(content, "text") and hasattr(content, "type") and content.type == "text":
                             print(content.text, end="")
                     print()  # Final newline
 

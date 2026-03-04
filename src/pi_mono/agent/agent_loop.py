@@ -273,7 +273,7 @@ async def _get_steering(config: AgentLoopConfig) -> list[AgentMessage]:
     result = config.get_steering_messages()
     if inspect.isawaitable(result):
         return await result
-    return result  # type: ignore[return-value]
+    return result
 
 
 async def _get_follow_up(config: AgentLoopConfig) -> list[AgentMessage]:
@@ -283,18 +283,18 @@ async def _get_follow_up(config: AgentLoopConfig) -> list[AgentMessage]:
     result = config.get_follow_up_messages()
     if inspect.isawaitable(result):
         return await result
-    return result  # type: ignore[return-value]
+    return result
 
 
 async def _resolve_convert_to_llm(
     config: AgentLoopConfig,
     messages: list[AgentMessage],
-) -> list:
+) -> list[Any]:
     """Call convert_to_llm, handling both sync and async implementations."""
     result = config.convert_to_llm(messages)
     if inspect.isawaitable(result):
         return await result
-    return result  # type: ignore[return-value]
+    return result
 
 
 async def _stream_assistant_response(
@@ -321,10 +321,7 @@ async def _stream_assistant_response(
     # Convert AgentTool list to Tool list for LLM context
     llm_tools: list[Tool] | None = None
     if context.tools:
-        llm_tools = [
-            Tool(name=t.name, description=t.description, parameters=t.parameters)
-            for t in context.tools
-        ]
+        llm_tools = [Tool(name=t.name, description=t.description, parameters=t.parameters) for t in context.tools]
 
     # Build LLM context
     llm_context = Context(
@@ -342,7 +339,7 @@ async def _stream_assistant_response(
         if inspect.isawaitable(key_result):
             resolved_api_key = await key_result
         else:
-            resolved_api_key = key_result  # type: ignore[assignment]
+            resolved_api_key = key_result
     if resolved_api_key is None:
         resolved_api_key = config.api_key
 
@@ -363,8 +360,8 @@ async def _stream_assistant_response(
         max_tokens=config.max_tokens,
         abort_event=abort_event,
         api_key=resolved_api_key,
-        transport=config.transport,
-        cache_retention=config.cache_retention,
+        transport=config.transport,  # type: ignore[arg-type]
+        cache_retention=config.cache_retention,  # type: ignore[arg-type]
         session_id=config.session_id,
         headers=config.headers,
         max_retry_delay_ms=config.max_retry_delay_ms,
@@ -378,23 +375,31 @@ async def _stream_assistant_response(
 
     async for event in response:
         if event.type == "start":
-            partial_message = event.partial
+            partial_message = event.partial  # type: ignore[union-attr]
             context.messages.append(partial_message)
             added_partial = True
             stream.push(MessageStartEvent(message=partial_message))
 
         elif event.type in (
-            "text_start", "text_delta", "text_end",
-            "thinking_start", "thinking_delta", "thinking_end",
-            "toolcall_start", "toolcall_delta", "toolcall_end",
+            "text_start",
+            "text_delta",
+            "text_end",
+            "thinking_start",
+            "thinking_delta",
+            "thinking_end",
+            "toolcall_start",
+            "toolcall_delta",
+            "toolcall_end",
         ):
             if partial_message is not None:
-                partial_message = event.partial
+                partial_message = event.partial  # type: ignore[union-attr]
                 context.messages[-1] = partial_message
-                stream.push(MessageUpdateEvent(
-                    assistant_message_event=event,
-                    message=partial_message,
-                ))
+                stream.push(
+                    MessageUpdateEvent(
+                        assistant_message_event=event,
+                        message=partial_message,
+                    )
+                )
 
         elif event.type in ("done", "error"):
             final_message: AssistantMessage = await response.result()
@@ -417,7 +422,7 @@ async def _execute_tool_calls(
     abort_event: asyncio.Event | None,
     stream: EventStream[AgentEvent, list[AgentMessage]],
     get_steering_messages: object | None = None,
-) -> dict:
+) -> dict[str, Any]:
     """Execute tool calls from an assistant message.
 
     Returns a dict with ``tool_results`` and optionally ``steering_messages``.
@@ -429,11 +434,13 @@ async def _execute_tool_calls(
     for index, tool_call in enumerate(tool_calls):
         tool = next((t for t in (tools or []) if t.name == tool_call.name), None)
 
-        stream.push(ToolExecutionStartEvent(
-            tool_call_id=tool_call.id,
-            tool_name=tool_call.name,
-            args=tool_call.arguments,
-        ))
+        stream.push(
+            ToolExecutionStartEvent(
+                tool_call_id=tool_call.id,
+                tool_name=tool_call.name,
+                args=tool_call.arguments,
+            )
+        )
 
         result: AgentToolResult
         is_error = False
@@ -444,16 +451,19 @@ async def _execute_tool_calls(
 
             # Build a Tool for validation
             from pi_mono.ai.types import Tool as LLMTool
+
             llm_tool = LLMTool(name=tool.name, description=tool.description, parameters=tool.parameters)
             validated_args = validate_tool_arguments(llm_tool, tool_call)
 
             def _on_update(partial_result: AgentToolResult) -> None:
-                stream.push(ToolExecutionUpdateEvent(
-                    tool_call_id=tool_call.id,
-                    tool_name=tool_call.name,
-                    args=tool_call.arguments,
-                    partial_result=partial_result,
-                ))
+                stream.push(
+                    ToolExecutionUpdateEvent(
+                        tool_call_id=tool_call.id,
+                        tool_name=tool_call.name,
+                        args=tool_call.arguments,
+                        partial_result=partial_result,
+                    )
+                )
 
             result = await tool.execute(tool_call.id, tool_call.name, validated_args, abort_event, _on_update)
         except Exception as exc:
@@ -462,12 +472,14 @@ async def _execute_tool_calls(
             )
             is_error = True
 
-        stream.push(ToolExecutionEndEvent(
-            tool_call_id=tool_call.id,
-            tool_name=tool_call.name,
-            result=result,
-            is_error=is_error,
-        ))
+        stream.push(
+            ToolExecutionEndEvent(
+                tool_call_id=tool_call.id,
+                tool_name=tool_call.name,
+                result=result,
+                is_error=is_error,
+            )
+        )
 
         tool_result_message = ToolResultMessage(
             tool_call_id=tool_call.id,
@@ -506,17 +518,21 @@ def _skip_tool_call(
         content=[TextContent(text="Skipped due to queued user message.")],
     )
 
-    stream.push(ToolExecutionStartEvent(
-        tool_call_id=tool_call.id,  # type: ignore[attr-defined]
-        tool_name=tool_call.name,  # type: ignore[attr-defined]
-        args=tool_call.arguments,  # type: ignore[attr-defined]
-    ))
-    stream.push(ToolExecutionEndEvent(
-        tool_call_id=tool_call.id,  # type: ignore[attr-defined]
-        tool_name=tool_call.name,  # type: ignore[attr-defined]
-        result=result,
-        is_error=True,
-    ))
+    stream.push(
+        ToolExecutionStartEvent(
+            tool_call_id=tool_call.id,  # type: ignore[attr-defined]
+            tool_name=tool_call.name,  # type: ignore[attr-defined]
+            args=tool_call.arguments,  # type: ignore[attr-defined]
+        )
+    )
+    stream.push(
+        ToolExecutionEndEvent(
+            tool_call_id=tool_call.id,  # type: ignore[attr-defined]
+            tool_name=tool_call.name,  # type: ignore[attr-defined]
+            result=result,
+            is_error=True,
+        )
+    )
 
     tool_result_message = ToolResultMessage(
         tool_call_id=tool_call.id,  # type: ignore[attr-defined]

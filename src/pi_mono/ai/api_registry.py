@@ -45,11 +45,7 @@ def get_api_providers() -> list[LLMProvider]:
 
 def unregister_api_providers(source_id: str) -> None:
     """Remove all providers whose *source_id* matches the given value."""
-    keys_to_remove = [
-        key
-        for key, entry in _registry.items()
-        if entry.source_id == source_id
-    ]
+    keys_to_remove = [key for key, entry in _registry.items() if entry.source_id == source_id]
     for key in keys_to_remove:
         del _registry[key]
 

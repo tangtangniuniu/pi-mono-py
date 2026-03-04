@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class LoadedExtension:
     """Result of loading a single extension module."""
+
     source_id: str
     api: ExtensionAPI
 

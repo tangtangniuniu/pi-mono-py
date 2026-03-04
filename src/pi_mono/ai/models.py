@@ -44,10 +44,10 @@ def calculate_cost(model: Model, usage: Usage) -> Cost:
     """
     from pi_mono.ai.types import Cost as _Cost
 
-    input_cost = (model.cost.input / 1_000_000) * usage.input_tokens
-    output_cost = (model.cost.output / 1_000_000) * usage.output_tokens
-    cache_read_cost = (model.cost.cache_read / 1_000_000) * usage.cache_read_tokens
-    cache_write_cost = (model.cost.cache_write / 1_000_000) * usage.cache_write_tokens
+    input_cost = (model.cost.input / 1_000_000) * usage.input
+    output_cost = (model.cost.output / 1_000_000) * usage.output
+    cache_read_cost = (model.cost.cache_read / 1_000_000) * usage.cache_read
+    cache_write_cost = (model.cost.cache_write / 1_000_000) * usage.cache_write
     total = input_cost + output_cost + cache_read_cost + cache_write_cost
 
     return _Cost(

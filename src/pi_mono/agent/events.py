@@ -18,9 +18,11 @@ class EventBus:
     def subscribe(self, callback: Callable[[AgentEvent], Awaitable[None] | None]) -> Callable[[], None]:
         """Subscribe to events. Returns unsubscribe function."""
         self._listeners.append(callback)
+
         def unsubscribe() -> None:
             if callback in self._listeners:
                 self._listeners.remove(callback)
+
         return unsubscribe
 
     async def emit(self, event: AgentEvent) -> None:

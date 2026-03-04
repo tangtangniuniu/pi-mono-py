@@ -12,7 +12,7 @@ import json
 import os
 import time
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 from openai import AsyncOpenAI
 
@@ -116,7 +116,7 @@ def _has_tool_history(messages: list[Any]) -> bool:
         if isinstance(msg, ToolResultMessage):
             return True
         if isinstance(msg, AssistantMessage) and any(
-            isinstance(b, ToolCall) or (hasattr(b, "type") and b.type == "toolCall")
+            isinstance(b, ToolCall) or (hasattr(b, "type") and getattr(b, "type", None) == "toolCall")
             for b in msg.content
         ):
             return True
@@ -173,24 +173,22 @@ def _detect_compat(model: Model) -> _ResolvedCompat:
     base_url = model.base_url
 
     is_zai = provider == "zai" or "api.z.ai" in base_url
-    is_non_standard = any([
-        provider == "cerebras",
-        "cerebras.ai" in base_url,
-        provider == "xai",
-        "api.x.ai" in base_url,
-        provider == "mistral",
-        "mistral.ai" in base_url,
-        "chutes.ai" in base_url,
-        "deepseek.com" in base_url,
-        is_zai,
-        provider == "opencode",
-        "opencode.ai" in base_url,
-    ])
-    use_max_tokens = (
-        provider == "mistral"
-        or "mistral.ai" in base_url
-        or "chutes.ai" in base_url
+    is_non_standard = any(
+        [
+            provider == "cerebras",
+            "cerebras.ai" in base_url,
+            provider == "xai",
+            "api.x.ai" in base_url,
+            provider == "mistral",
+            "mistral.ai" in base_url,
+            "chutes.ai" in base_url,
+            "deepseek.com" in base_url,
+            is_zai,
+            provider == "opencode",
+            "opencode.ai" in base_url,
+        ]
     )
+    use_max_tokens = provider == "mistral" or "mistral.ai" in base_url or "chutes.ai" in base_url
     is_grok = provider == "xai" or "api.x.ai" in base_url
     is_mistral = provider == "mistral" or "mistral.ai" in base_url
 
@@ -216,11 +214,7 @@ def _get_compat(model: Model) -> _ResolvedCompat:
         return detected
 
     return _ResolvedCompat(
-        supports_store=(
-            compat.supports_store
-            if compat.supports_store is not None
-            else detected.supports_store
-        ),
+        supports_store=(compat.supports_store if compat.supports_store is not None else detected.supports_store),
         supports_developer_role=(
             compat.supports_developer_role
             if compat.supports_developer_role is not None
@@ -237,9 +231,7 @@ def _get_compat(model: Model) -> _ResolvedCompat:
             else detected.supports_usage_in_streaming
         ),
         max_tokens_field=(
-            compat.max_tokens_field
-            if compat.max_tokens_field is not None
-            else detected.max_tokens_field
+            compat.max_tokens_field if compat.max_tokens_field is not None else detected.max_tokens_field
         ),
         requires_tool_result_name=(
             compat.requires_tool_result_name
@@ -261,15 +253,9 @@ def _get_compat(model: Model) -> _ResolvedCompat:
             if compat.requires_mistral_tool_ids is not None
             else detected.requires_mistral_tool_ids
         ),
-        thinking_format=(
-            compat.thinking_format
-            if compat.thinking_format is not None
-            else detected.thinking_format
-        ),
+        thinking_format=(compat.thinking_format if compat.thinking_format is not None else detected.thinking_format),
         supports_strict_mode=(
-            compat.supports_strict_mode
-            if compat.supports_strict_mode is not None
-            else detected.supports_strict_mode
+            compat.supports_strict_mode if compat.supports_strict_mode is not None else detected.supports_strict_mode
         ),
     )
 
@@ -292,6 +278,7 @@ def _convert_messages(
         if "|" in tool_id:
             call_id = tool_id.split("|")[0]
             import re
+
             sanitized = re.sub(r"[^a-zA-Z0-9_-]", "_", call_id)
             return sanitized[:40]
         if model.provider == "openai":
@@ -313,15 +300,13 @@ def _convert_messages(
         msg = messages[i]
 
         # Bridge assistant message after tool result for providers that need it
-        if (
-            compat.requires_assistant_after_tool_result
-            and last_role == "toolResult"
-            and msg.role == "user"
-        ):
-            params.append({
-                "role": "assistant",
-                "content": "I have processed the tool results.",
-            })
+        if compat.requires_assistant_after_tool_result and last_role == "toolResult" and msg.role == "user":
+            params.append(
+                {
+                    "role": "assistant",
+                    "content": "I have processed the tool results.",
+                }
+            )
 
         if msg.role == "user":
             assert isinstance(msg, UserMessage)
@@ -333,17 +318,15 @@ def _convert_messages(
                     if isinstance(item, TextContent):
                         parts.append({"type": "text", "text": item.text})
                     elif isinstance(item, ImageContent):
-                        parts.append({
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{item.mime_type};base64,{item.data}",
-                            },
-                        })
-                filtered = (
-                    [p for p in parts if p.get("type") != "image_url"]
-                    if "image" not in model.input
-                    else parts
-                )
+                        parts.append(
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:{item.mime_type};base64,{item.data}",
+                                },
+                            }
+                        )
+                filtered = [p for p in parts if p.get("type") != "image_url"] if "image" not in model.input else parts
                 if not filtered:
                     i += 1
                     continue
@@ -364,15 +347,11 @@ def _convert_messages(
                 if model.provider == "github-copilot":
                     assistant_msg["content"] = "".join(b.text for b in non_empty_text)
                 else:
-                    assistant_msg["content"] = [
-                        {"type": "text", "text": b.text} for b in non_empty_text
-                    ]
+                    assistant_msg["content"] = [{"type": "text", "text": b.text} for b in non_empty_text]
 
             # Thinking blocks
             thinking_blocks = [b for b in msg.content if isinstance(b, ThinkingContent)]
-            non_empty_thinking = [
-                b for b in thinking_blocks if b.thinking and b.thinking.strip()
-            ]
+            non_empty_thinking = [b for b in thinking_blocks if b.thinking and b.thinking.strip()]
             if non_empty_thinking:
                 if compat.requires_thinking_as_text:
                     thinking_text = "\n\n".join(b.thinking for b in non_empty_thinking)
@@ -384,9 +363,7 @@ def _convert_messages(
                 else:
                     sig = non_empty_thinking[0].thinking_signature
                     if sig and len(sig) > 0:
-                        assistant_msg[sig] = "\n".join(
-                            b.thinking for b in non_empty_thinking
-                        )
+                        assistant_msg[sig] = "\n".join(b.thinking for b in non_empty_thinking)
 
             # Tool calls
             tool_calls = [b for b in msg.content if isinstance(b, ToolCall)]
@@ -432,15 +409,9 @@ def _convert_messages(
                 tool_msg = messages[j]
                 assert isinstance(tool_msg, ToolResultMessage)
 
-                text_parts = [
-                    c.text
-                    for c in tool_msg.content
-                    if isinstance(c, TextContent)
-                ]
+                text_parts = [c.text for c in tool_msg.content if isinstance(c, TextContent)]
                 text_result = "\n".join(text_parts)
-                has_images = any(
-                    isinstance(c, ImageContent) for c in tool_msg.content
-                )
+                has_images = any(isinstance(c, ImageContent) for c in tool_msg.content)
 
                 has_text = len(text_result) > 0
                 tool_result_msg: dict[str, Any] = {
@@ -455,12 +426,14 @@ def _convert_messages(
                 if has_images and "image" in model.input:
                     for block in tool_msg.content:
                         if isinstance(block, ImageContent):
-                            image_blocks.append({
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:{block.mime_type};base64,{block.data}",
-                                },
-                            })
+                            image_blocks.append(
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": f"data:{block.mime_type};base64,{block.data}",
+                                    },
+                                }
+                            )
 
                 j += 1
 
@@ -468,17 +441,21 @@ def _convert_messages(
 
             if image_blocks:
                 if compat.requires_assistant_after_tool_result:
-                    params.append({
-                        "role": "assistant",
-                        "content": "I have processed the tool results.",
-                    })
-                params.append({
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": "Attached image(s) from tool result:"},
-                        *image_blocks,
-                    ],
-                })
+                    params.append(
+                        {
+                            "role": "assistant",
+                            "content": "I have processed the tool results.",
+                        }
+                    )
+                params.append(
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "Attached image(s) from tool result:"},
+                            *image_blocks,
+                        ],
+                    }
+                )
                 last_role = "user"
             else:
                 last_role = "toolResult"
@@ -522,8 +499,7 @@ def _create_client(
         api_key = os.environ.get("OPENAI_API_KEY")
         if not api_key:
             raise ValueError(
-                "OpenAI API key is required. "
-                "Set OPENAI_API_KEY environment variable or pass it as an argument."
+                "OpenAI API key is required. Set OPENAI_API_KEY environment variable or pass it as an argument."
             )
 
     headers: dict[str, str] = dict(model.headers) if model.headers else {}
@@ -711,29 +687,35 @@ async def _stream_completions(
             if block is None:
                 return events
             if block.type == "text":
-                events.append(TextEndEvent(
-                    content_index=block_index(),
-                    content=block.text,
-                    partial=partial(),
-                ))
+                events.append(
+                    TextEndEvent(
+                        content_index=block_index(),
+                        content=block.text,
+                        partial=partial(),
+                    )
+                )
             elif block.type == "thinking":
-                events.append(ThinkingEndEvent(
-                    content_index=block_index(),
-                    content=block.thinking,
-                    partial=partial(),
-                ))
+                events.append(
+                    ThinkingEndEvent(
+                        content_index=block_index(),
+                        content=block.thinking,
+                        partial=partial(),
+                    )
+                )
             elif block.type == "toolCall":
                 block.arguments = _parse_streaming_json(block.partial_args)
-                events.append(ToolCallEndEvent(
-                    content_index=block_index(),
-                    tool_call=ToolCall(
-                        id=block.id,
-                        name=block.name,
-                        arguments=block.arguments,
-                        thought_signature=block.thought_signature,
-                    ),
-                    partial=partial(),
-                ))
+                events.append(
+                    ToolCallEndEvent(
+                        content_index=block_index(),
+                        tool_call=ToolCall(
+                            id=block.id,
+                            name=block.name,
+                            arguments=block.arguments,
+                            thought_signature=block.thought_signature,
+                        ),
+                        partial=partial(),
+                    )
+                )
             return events
 
         async for chunk in openai_stream:
@@ -870,11 +852,15 @@ async def _stream_completions(
                     if detail_type == "reasoning.encrypted" and detail_id and detail_data:
                         for b in blocks:
                             if b.type == "toolCall" and b.id == detail_id:
-                                raw = detail if isinstance(detail, dict) else {
-                                    "type": detail_type,
-                                    "id": detail_id,
-                                    "data": detail_data,
-                                }
+                                raw = (
+                                    detail
+                                    if isinstance(detail, dict)
+                                    else {
+                                        "type": detail_type,
+                                        "id": detail_id,
+                                        "data": detail_data,
+                                    }
+                                )
                                 b.thought_signature = json.dumps(raw)
 
         # Finish the last block
@@ -906,11 +892,11 @@ async def _stream_completions(
         if stop_reason in ("aborted", "error"):
             raise RuntimeError("An unknown error occurred")
 
-        yield DoneEvent(reason=stop_reason, message=final_msg)
+        yield DoneEvent(reason=stop_reason, message=final_msg)  # type: ignore[arg-type]
 
     except Exception as exc:
         error_message = str(exc)
-        err_stop: StopReason = "error"
+        err_stop: Literal["aborted", "error"] = "error"
         error_msg = AssistantMessage(
             content=[_block_to_content(b) for b in blocks],
             api=model.api,
@@ -976,17 +962,12 @@ class OpenAICompletionsProvider:
 
         reasoning_effort: ThinkingLevel | None = None
         if options and options.reasoning:
-            reasoning_effort = (
-                options.reasoning
-                if supports_xhigh(model)
-                else _clamp_reasoning(options.reasoning)
-            )
+            reasoning_effort = options.reasoning if supports_xhigh(model) else _clamp_reasoning(options.reasoning)
 
         completions_opts = OpenAICompletionsOptions(
             temperature=options.temperature if options else None,
             max_tokens=(
-                (options.max_tokens if options and options.max_tokens else None)
-                or min(model.max_tokens, 32000)
+                (options.max_tokens if options and options.max_tokens else None) or min(model.max_tokens, 32000)
             ),
             abort_event=options.abort_event if options else None,
             api_key=api_key,

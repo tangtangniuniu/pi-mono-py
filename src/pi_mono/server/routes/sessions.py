@@ -18,6 +18,7 @@ router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 def _get_registry() -> SessionRegistry:
     """Lazy import to avoid circular dependencies."""
     from pi_mono.server.app import get_session_registry
+
     return get_session_registry()
 
 

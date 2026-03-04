@@ -5,6 +5,7 @@ export type { Model } from "@mariozechner/pi-ai";
 export { ChatPanel } from "./ChatPanel.js";
 // Components
 export { AgentInterface } from "./components/AgentInterface.js";
+export type { AgentSession } from "./components/AgentInterface.js";
 export { AttachmentTile } from "./components/AttachmentTile.js";
 export { ConsoleBlock } from "./components/ConsoleBlock.js";
 export { CustomProviderCard } from "./components/CustomProviderCard.js";
@@ -117,3 +118,6 @@ export { clearAuthToken, getAuthToken } from "./utils/auth-token.js";
 export { formatCost, formatModelCost, formatTokenCount, formatUsage } from "./utils/format.js";
 export { i18n, setLanguage, translations } from "./utils/i18n.js";
 export { applyProxyIfNeeded, createStreamFn, isCorsError, shouldUseProxyForProvider } from "./utils/proxy-utils.js";
+export { RestAgentClient, SseConnectionManager } from "./utils/rest-agent-client.js";
+export type { RestAgentClientOptions, SessionInfo, SessionListItem } from "./utils/rest-agent-client.js";
+export { getRestDataService, isRestMode, RestDataService, setRestDataService } from "./utils/rest-data-service.js";

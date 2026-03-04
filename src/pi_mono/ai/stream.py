@@ -7,7 +7,7 @@ registry and delegate to it.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pi_mono.ai.api_registry import get_api_provider
 from pi_mono.ai.utils.event_stream import AssistantMessageEventStream
@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     )
 
 
-def _resolve_api_provider(api: str) -> object:
+def _resolve_api_provider(api: str) -> Any:
     """Look up the registered provider for *api* or raise."""
     # Import here to use the LLMProvider type only for the error message;
     # the registry returns the concrete provider instance.
@@ -67,8 +67,10 @@ def stream(
     """
     provider = _resolve_api_provider(model.api)
     event_stream = AssistantMessageEventStream()
-    source: AsyncIterator[AssistantMessageEvent] = provider.stream(  # type: ignore[union-attr]
-        model, context, options,
+    source: AsyncIterator[AssistantMessageEvent] = provider.stream(
+        model,
+        context,
+        options,
     )
     _pipe_iterator_to_stream(source, event_stream)
     return event_stream
@@ -105,8 +107,10 @@ def stream_simple(
     """
     provider = _resolve_api_provider(model.api)
     event_stream = AssistantMessageEventStream()
-    source: AsyncIterator[AssistantMessageEvent] = provider.stream_simple(  # type: ignore[union-attr]
-        model, context, options,
+    source: AsyncIterator[AssistantMessageEvent] = provider.stream_simple(
+        model,
+        context,
+        options,
     )
     _pipe_iterator_to_stream(source, event_stream)
     return event_stream
@@ -247,8 +251,6 @@ def _pipe_iterator_to_stream(
     except RuntimeError:
         # No running loop -- cannot schedule the drain task.  This
         # shouldn't happen in normal usage since callers are async.
-        raise RuntimeError(
-            "stream() must be called from within a running asyncio event loop"
-        ) from None
+        raise RuntimeError("stream() must be called from within a running asyncio event loop") from None
 
     _task = loop.create_task(_drain())  # noqa: RUF006

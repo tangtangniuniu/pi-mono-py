@@ -49,20 +49,23 @@ async def run_chat(
         if prompt:
             # Non-interactive: print mode
             from pi_mono.coding_agent.modes.print_mode import PrintMode
-            mode = PrintMode(session, verbose=verbose)
-            await mode.run(prompt)
+
+            pm = PrintMode(session, verbose=verbose)
+            await pm.run(prompt)
         elif print_mode:
             # Read from stdin
             from pi_mono.coding_agent.modes.print_mode import PrintMode
-            mode = PrintMode(session, verbose=verbose)
+
+            pm = PrintMode(session, verbose=verbose)
             stdin_content = sys.stdin.read()
             if stdin_content.strip():
-                await mode.run(stdin_content)
+                await pm.run(stdin_content)
         else:
             # Interactive mode
             from pi_mono.coding_agent.modes.interactive import InteractiveMode
-            mode = InteractiveMode(session, verbose=verbose)
-            await mode.run()
+
+            im = InteractiveMode(session, verbose=verbose)
+            await im.run()
     finally:
         await session.close()
 
@@ -127,6 +130,7 @@ async def run_list_models(provider: str | None = None, search: str | None = None
 def main() -> None:
     """CLI entry point."""
     from pi_mono.coding_agent.cli.args import cli
+
     cli()
 
 

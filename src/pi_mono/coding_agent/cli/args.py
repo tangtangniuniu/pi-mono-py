@@ -40,20 +40,23 @@ def chat(
     """Start an interactive chat session."""
     from pi_mono.coding_agent.main import run_chat
 
-    asyncio.run(run_chat(
-        model=model,
-        prompt=prompt,
-        session_id=session,
-        print_mode=print_mode,
-        thinking_level=thinking,
-        verbose=verbose,
-    ))
+    asyncio.run(
+        run_chat(
+            model=model,
+            prompt=prompt,
+            session_id=session,
+            print_mode=print_mode,
+            thinking_level=thinking,
+            verbose=verbose,
+        )
+    )
 
 
 @cli.command()
 def sessions() -> None:
     """List saved sessions."""
     from pi_mono.coding_agent.main import run_list_sessions
+
     asyncio.run(run_list_sessions())
 
 
@@ -63,4 +66,5 @@ def sessions() -> None:
 def models(provider: str | None = None, search: str | None = None) -> None:
     """List available models."""
     from pi_mono.coding_agent.main import run_list_models
+
     asyncio.run(run_list_models(provider=provider, search=search))

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
 @dataclass
 class Skill:
     """A loaded skill."""
+
     name: str
     description: str
     prompt: str
@@ -38,12 +39,14 @@ class SkillLoader:
                 description = lines[0].lstrip("# ").strip() if lines else name
                 prompt = content
 
-                skills.append(Skill(
-                    name=name,
-                    description=description,
-                    prompt=prompt,
-                    source_path=path,
-                ))
+                skills.append(
+                    Skill(
+                        name=name,
+                        description=description,
+                        prompt=prompt,
+                        source_path=path,
+                    )
+                )
             except Exception:
                 continue
 

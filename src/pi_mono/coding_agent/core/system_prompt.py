@@ -66,7 +66,9 @@ def get_git_context() -> dict[str, str]:
     try:
         result = subprocess.run(
             ["git", "rev-parse", "--is-inside-work-tree"],
-            capture_output=True, text=True, timeout=5,
+            capture_output=True,
+            text=True,
+            timeout=5,
         )
         context["is_git_repo"] = "yes" if result.returncode == 0 else "no"
     except Exception:
@@ -76,7 +78,9 @@ def get_git_context() -> dict[str, str]:
         try:
             result = subprocess.run(
                 ["git", "branch", "--show-current"],
-                capture_output=True, text=True, timeout=5,
+                capture_output=True,
+                text=True,
+                timeout=5,
             )
             if result.returncode == 0:
                 context["git_branch"] = result.stdout.strip()

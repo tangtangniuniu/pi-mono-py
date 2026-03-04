@@ -177,9 +177,9 @@ def _is_terminal_event(event: AssistantMessageEvent) -> bool:
 
 def _extract_assistant_message(event: AssistantMessageEvent) -> AssistantMessage:
     if event.type == "done":
-        return event.message  # type: ignore[union-attr]
+        return event.message
     if event.type == "error":
-        return event.error  # type: ignore[union-attr]
+        return event.error
     raise ValueError(f"Unexpected event type for final result: {event.type}")
 
 

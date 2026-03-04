@@ -50,13 +50,13 @@ class SummaryCompaction:
         # Serialize old messages to text for summarization
         old_text_parts: list[str] = []
         for msg in old_messages:
-            if hasattr(msg, 'role'):
+            if hasattr(msg, "role"):
                 role = msg.role
-                if hasattr(msg, 'content'):
+                if hasattr(msg, "content"):
                     if isinstance(msg.content, str):
                         old_text_parts.append(f"{role}: {msg.content}")
                     elif isinstance(msg.content, list):
-                        texts = [c.text for c in msg.content if hasattr(c, 'text')]
+                        texts = [c.text for c in msg.content if hasattr(c, "text")]
                         if texts:
                             old_text_parts.append(f"{role}: {' '.join(texts)}")
 
@@ -80,15 +80,15 @@ class SummaryCompaction:
 
                 result: AssistantMessage | None = None
                 async for event in self._stream_fn(model, summary_context, SimpleStreamOptions()):
-                    if hasattr(event, 'type') and event.type in ("done", "error"):
-                        if event.type == "done" and hasattr(event, 'message'):
+                    if hasattr(event, "type") and event.type in ("done", "error"):
+                        if event.type == "done" and hasattr(event, "message"):
                             result = event.message
                         break
 
                 if result and result.content:
                     summary_text = ""
                     for c in result.content:
-                        if hasattr(c, 'text'):
+                        if hasattr(c, "text"):
                             summary_text += c.text
 
                     if summary_text:

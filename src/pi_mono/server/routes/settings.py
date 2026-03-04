@@ -14,6 +14,7 @@ router = APIRouter(prefix="/api/settings", tags=["settings"])
 
 def _get_settings_manager() -> SettingsManager:
     from pi_mono.server.app import get_settings_manager
+
     return get_settings_manager()
 
 

@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 class Extension(Protocol):
     """Extension protocol."""
+
     name: str
 
     def get_tools(self) -> list[AgentTool]: ...
@@ -21,6 +22,7 @@ class Extension(Protocol):
 @dataclass
 class LoadedExtension:
     """A loaded extension."""
+
     name: str
     tools: list[AgentTool]
 
@@ -47,11 +49,13 @@ class ExtensionLoader:
 
                     if hasattr(module, "create_extension"):
                         ext = module.create_extension()
-                        tools = ext.get_tools() if hasattr(ext, 'get_tools') else []
-                        extensions.append(LoadedExtension(
-                            name=getattr(ext, 'name', path.stem),
-                            tools=tools,
-                        ))
+                        tools = ext.get_tools() if hasattr(ext, "get_tools") else []
+                        extensions.append(
+                            LoadedExtension(
+                                name=getattr(ext, "name", path.stem),
+                                tools=tools,
+                            )
+                        )
             except Exception:
                 continue
 

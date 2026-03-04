@@ -89,7 +89,7 @@ class Agent:
         self,
         convert_to_llm: Callable[[list[AgentMessage]], list[Message]] | None = None,
         transform_context: Callable[[list[AgentMessage], asyncio.Event | None], Any] | None = None,
-        stream_fn: Callable | None = None,
+        stream_fn: Callable[..., Any] | None = None,
         steering_mode: str = "one-at-a-time",
         follow_up_mode: str = "one-at-a-time",
         session_id: str | None = None,
@@ -325,12 +325,12 @@ class Agent:
             raise RuntimeError("No model configured")
 
         if isinstance(input_, list):
-            msgs = input_
+            msgs: list[AgentMessage] = input_
         elif isinstance(input_, str):
             content: list[TextContent | ImageContent] = [TextContent(text=input_)]
             if images:
                 content.extend(images)
-            msgs: list[AgentMessage] = [UserMessage(role="user", content=content, timestamp=time.time())]
+            msgs = [UserMessage(role="user", content=content, timestamp=time.time())]
         else:
             msgs = [input_]
 
@@ -438,7 +438,7 @@ class Agent:
 
         config = AgentLoopConfig(
             model=model,
-            reasoning=reasoning,
+            reasoning=reasoning,  # type: ignore[arg-type]
             session_id=self._session_id,
             transport=self._transport,
             thinking_budgets=self._thinking_budgets,
@@ -486,7 +486,7 @@ class Agent:
                     has_non_empty = any(
                         (hasattr(c, "thinking") and c.thinking.strip())
                         or (hasattr(c, "text") and c.text.strip())
-                        or (c.type == "toolCall" and hasattr(c, "name") and c.name.strip())
+                        or (getattr(c, "type", None) == "toolCall" and hasattr(c, "name") and c.name.strip())
                         for c in partial.content
                     )
                     if has_non_empty:

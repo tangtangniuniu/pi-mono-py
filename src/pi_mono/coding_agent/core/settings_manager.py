@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
 class Settings(BaseModel):
     """User configuration settings."""
+
     default_model: str = DEFAULT_MODEL
     thinking_level: str = "off"
     max_turns: int = DEFAULT_MAX_TURNS

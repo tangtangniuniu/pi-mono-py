@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 # --- Session schemas ---
 
+
 class CreateSessionRequest(BaseModel):
     model: str | None = None
     thinking_level: str | None = None
@@ -32,6 +33,7 @@ class SessionSummary(BaseModel):
 
 # --- Message schemas ---
 
+
 class SendMessageRequest(BaseModel):
     content: str
 
@@ -41,6 +43,7 @@ class SteerRequest(BaseModel):
 
 
 # --- Model schemas ---
+
 
 class ModelInfo(BaseModel):
     id: str
@@ -58,12 +61,15 @@ class SetThinkingRequest(BaseModel):
 
 # --- Settings schemas ---
 
+
 class UpdateSettingsRequest(BaseModel):
     """Partial settings update — any field can be provided."""
+
     model_config = {"extra": "allow"}
 
 
 # --- Health ---
+
 
 class HealthResponse(BaseModel):
     status: str = "ok"
@@ -71,6 +77,7 @@ class HealthResponse(BaseModel):
 
 
 # --- Error ---
+
 
 class ErrorResponse(BaseModel):
     error: str

@@ -27,8 +27,6 @@ def validate_tool_arguments(tool: Tool, tool_call: ToolCall) -> dict[str, Any]:
     required: list[str] = schema.get("required", [])
     missing = [field for field in required if field not in args]
     if missing:
-        raise ValueError(
-            f"Tool '{tool.name}' missing required argument(s): {', '.join(missing)}"
-        )
+        raise ValueError(f"Tool '{tool.name}' missing required argument(s): {', '.join(missing)}")
 
     return args

@@ -14,6 +14,7 @@ import type { AutoDiscoveryProviderType } from "../storage/stores/custom-provide
 import { formatModelCost } from "../utils/format.js";
 import { i18n } from "../utils/i18n.js";
 import { discoverModels } from "../utils/model-discovery.js";
+import { getRestDataService, isRestMode } from "../utils/rest-data-service.js";
 
 @customElement("agent-model-selector")
 export class ModelSelector extends DialogBase {
@@ -25,6 +26,7 @@ export class ModelSelector extends DialogBase {
 	@state() selectedIndex = 0;
 	@state() private navigationMode: "mouse" | "keyboard" = "mouse";
 	@state() private customProviderModels: Model<any>[] = [];
+	@state() private restModels: Model<any>[] = [];
 
 	private onSelectCallback?: (model: Model<any>) => void;
 	private scrollContainerRef = createRef<HTMLDivElement>();
@@ -38,7 +40,20 @@ export class ModelSelector extends DialogBase {
 		selector.currentModel = currentModel;
 		selector.onSelectCallback = onSelect;
 		selector.open();
-		selector.loadCustomProviders();
+		if (isRestMode()) {
+			selector.loadRestModels();
+		} else {
+			selector.loadCustomProviders();
+		}
+	}
+
+	private async loadRestModels() {
+		try {
+			const service = getRestDataService()!;
+			this.restModels = await service.getModels();
+		} catch (err) {
+			console.error("Failed to load models from REST:", err);
+		}
 	}
 
 	override async firstUpdated(changedProperties: PropertyValues): Promise<void> {
@@ -157,20 +172,28 @@ export class ModelSelector extends DialogBase {
 	}
 
 	private getFilteredModels(): Array<{ provider: string; id: string; model: any }> {
-		// Collect all models from known providers
+		// Collect all models
 		const allModels: Array<{ provider: string; id: string; model: any }> = [];
-		const knownProviders = getProviders();
 
-		for (const provider of knownProviders) {
-			const models = getModels(provider as any);
-			for (const model of models) {
-				allModels.push({ provider, id: model.id, model });
+		if (isRestMode()) {
+			// In REST mode, models come from the server
+			for (const model of this.restModels) {
+				allModels.push({ provider: model.provider, id: model.id, model });
 			}
-		}
+		} else {
+			// In direct mode, models come from local registry
+			const knownProviders = getProviders();
+			for (const provider of knownProviders) {
+				const models = getModels(provider as any);
+				for (const model of models) {
+					allModels.push({ provider, id: model.id, model });
+				}
+			}
 
-		// Add custom provider models
-		for (const model of this.customProviderModels) {
-			allModels.push({ provider: model.provider, id: model.id, model });
+			// Add custom provider models
+			for (const model of this.customProviderModels) {
+				allModels.push({ provider: model.provider, id: model.id, model });
+			}
 		}
 
 		// Filter models based on search and capability filters

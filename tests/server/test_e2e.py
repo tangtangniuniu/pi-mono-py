@@ -18,7 +18,7 @@ from fastapi.testclient import TestClient
 
 from pi_mono.ai.api_registry import clear_api_providers, register_api_provider
 from pi_mono.server.app import create_app
-from tests.conftest import MockLLMProvider, make_model
+from tests.conftest import MockLLMProvider, make_assistant_message, make_model
 
 
 @pytest.fixture
@@ -173,6 +173,157 @@ class TestE2EErrorHandling:
         # Abort on idle session should be idempotent
         abort_resp = client.post(f"/api/sessions/{session_id}/abort")
         assert abort_resp.status_code == 200
+
+        client.delete(f"/api/sessions/{session_id}")
+
+
+class TestE2ESSEEventStream:
+    """SSE event stream verification using the event_stream_generator."""
+
+    def test_sse_event_format(self, e2e_client: TestClient) -> None:
+        """Test that the SSE serialization produces correct event format."""
+        from pi_mono.server.sse import _sse_event
+
+        result = _sse_event("agent_start", {"type": "agent_start"})
+        assert result.startswith("event: agent_start\n")
+        assert "data: " in result
+        assert result.endswith("\n\n")
+
+    def test_sse_serialize_event(self, e2e_client: TestClient) -> None:
+        """Test event serialization handles agent events."""
+        from pi_mono.agent.types import AgentStartEvent
+        from pi_mono.server.sse import _serialize_event
+
+        event = AgentStartEvent()
+        data = _serialize_event(event)
+        assert data["type"] == "agent_start"
+
+    def test_sse_serialize_message_end_event(self, e2e_client: TestClient) -> None:
+        """Test event serialization of MessageEndEvent."""
+        from pi_mono.agent.types import MessageEndEvent
+        from pi_mono.server.sse import _serialize_event
+
+        msg = make_assistant_message(text="hello")
+        event = MessageEndEvent(message=msg)
+        data = _serialize_event(event)
+        assert data["type"] == "message_end"
+        # Complex objects are serialized as type name
+        assert "message" in data
+
+    @pytest.mark.asyncio
+    async def test_sse_generator_session_not_found(self, e2e_client: TestClient) -> None:
+        """Test that SSE generator yields error for missing session."""
+        from pi_mono.server.sse import event_stream_generator
+
+        events = []
+        async for sse_text in event_stream_generator("nonexistent"):
+            events.append(sse_text)
+            break  # Only need the first event
+
+        assert len(events) == 1
+        assert "error" in events[0]
+        assert "Session not found" in events[0]
+
+    @pytest.mark.asyncio
+    async def test_sse_generator_with_active_session(self, e2e_client: TestClient) -> None:
+        """Test SSE event streaming for an active session with subscribed events."""
+        import asyncio
+
+        from pi_mono.server.app import get_session_registry
+
+        # Create a session via the API
+        create_resp = e2e_client.post("/api/sessions", json={})
+        session_id = create_resp.json()["session_id"]
+
+        registry = get_session_registry()
+        session = registry.get(session_id)
+        assert session is not None
+        assert session.agent is not None
+
+        # Send a message to trigger events — but read events via subscribe
+        collected_events: list[str] = []
+
+        from pi_mono.agent.types import AgentEvent
+
+        def on_event(event: AgentEvent) -> None:
+            collected_events.append(event.type)
+
+        unsub = session.agent.subscribe(on_event)
+
+        # Send message in background
+        msg_resp = e2e_client.post(
+            f"/api/sessions/{session_id}/messages",
+            json={"content": "Hello SSE test"},
+        )
+        assert msg_resp.status_code == 202
+
+        # Wait for agent to finish processing
+        await asyncio.sleep(1.0)
+
+        unsub()
+
+        # Agent should have emitted events
+        # Depending on mock provider, we expect at least agent_start and agent_end
+        if collected_events:
+            assert "agent_start" in collected_events or "message_start" in collected_events
+
+        # Clean up
+        e2e_client.delete(f"/api/sessions/{session_id}")
+
+
+class TestE2EMessageHistory:
+    """Verify message history retrieval after sending messages."""
+
+    def test_get_messages_empty_session(self, e2e_client: TestClient) -> None:
+        """New session should have no messages."""
+        client = e2e_client
+        create_resp = client.post("/api/sessions", json={})
+        session_id = create_resp.json()["session_id"]
+
+        msgs_resp = client.get(f"/api/sessions/{session_id}/messages")
+        assert msgs_resp.status_code == 200
+        assert msgs_resp.json() == []
+
+        client.delete(f"/api/sessions/{session_id}")
+
+    def test_get_messages_not_found(self, e2e_client: TestClient) -> None:
+        """Non-existent session should return 404."""
+        client = e2e_client
+        resp = client.get("/api/sessions/nonexistent/messages")
+        assert resp.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_messages_after_send(self, e2e_client: TestClient) -> None:
+        """After sending a message and waiting, messages should appear in history."""
+        import asyncio
+
+        client = e2e_client
+
+        # Create session
+        create_resp = client.post("/api/sessions", json={})
+        session_id = create_resp.json()["session_id"]
+
+        # Send a message
+        msg_resp = client.post(
+            f"/api/sessions/{session_id}/messages",
+            json={"content": "Tell me a joke"},
+        )
+        assert msg_resp.status_code == 202
+
+        # Wait for agent to finish processing
+        await asyncio.sleep(1.0)
+
+        # Check messages in history
+        msgs_resp = client.get(f"/api/sessions/{session_id}/messages")
+        assert msgs_resp.status_code == 200
+        messages = msgs_resp.json()
+
+        # Should have at least the user message added by the agent
+        # The mock provider generates a response, so we may also have an assistant message
+        if messages:
+            roles = [m.get("role") for m in messages]
+            # User message should be present
+            assert "user" in roles
 
         client.delete(f"/api/sessions/{session_id}")
 

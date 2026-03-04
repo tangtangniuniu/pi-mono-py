@@ -7,7 +7,7 @@
 
 ## 2. AI 层重构（ai-openai-compat）
 
-- [ ] 2.1 编写 `openai_compat` provider 单元测试：覆盖消息转换、流式事件生成、兼容性检测、成本计算
+- [x] 2.1 编写 `openai_compat` provider 单元测试：覆盖消息转换、流式事件生成、兼容性检测、成本计算
 - [x] 2.2 将 `openai_completions.py` 重命名为 `openai_compat.py`，更新所有内部引用
 - [x] 2.3 移除 `anthropic.py`、`google.py`、`openai_responses.py` provider 文件
 - [x] 2.4 编写 `api_registry` 单元测试：覆盖注册、查找、按 source_id 批量注销
@@ -74,12 +74,12 @@
 
 ## 8. Web-UI REST 适配（web-ui-rest）
 
-- [ ] 8.1 实现 `RestAgentClient` 类：封装 REST API 调用（prompt、steer、abort）和 SSE 订阅（subscribe）
-- [ ] 8.2 修改 `AgentInterface` 组件：从直接使用 Agent 改为接受 RestAgentClient
-- [ ] 8.3 修改会话管理：session list/create/delete 改为 REST API 调用
-- [ ] 8.4 修改模型选择器：fetch models 和 switch model 改为 REST API 调用
-- [ ] 8.5 修改设置对话框：load/save settings 改为 REST API 调用
-- [ ] 8.6 实现 SSE 连接管理：自动连接、指数退避重连、清理断开
+- [x] 8.1 实现 `RestAgentClient` 类：封装 REST API 调用（prompt、steer、abort）和 SSE 订阅（subscribe）
+- [x] 8.2 修改 `AgentInterface` 组件：从直接使用 Agent 改为接受 RestAgentClient
+- [x] 8.3 修改会话管理：session list/create/delete 改为 REST API 调用
+- [x] 8.4 修改模型选择器：fetch models 和 switch model 改为 REST API 调用
+- [x] 8.5 修改设置对话框：load/save settings 改为 REST API 调用
+- [x] 8.6 实现 SSE 连接管理：自动连接、指数退避重连、清理断开
 
 ## 9. .pi 目录结构
 
@@ -89,8 +89,8 @@
 
 ## 10. 端到端验证
 
-- [ ] 10.1 编写 E2E 测试：启动 REST 服务 → 创建会话 → 发送消息 → 验证 SSE 事件流 → 验证消息历史
-- [ ] 10.2 验证 print mode CLI 仍然正常工作（回归测试）
+- [x] 10.1 编写 E2E 测试：启动 REST 服务 → 创建会话 → 发送消息 → 验证 SSE 事件流 → 验证消息历史
+- [x] 10.2 验证 print mode CLI 仍然正常工作（回归测试）
 - [x] 10.3 运行完整测试套件，确认覆盖率 ≥ 80%（新代码覆盖率 83.56%，219 测试全部通过）
-- [ ] 10.4 运行 mypy 类型检查，确认无错误
-- [ ] 10.5 运行 ruff lint/format，确认代码风格一致
+- [x] 10.4 运行 mypy 类型检查，确认无错误
+- [x] 10.5 运行 ruff lint/format，确认代码风格一致

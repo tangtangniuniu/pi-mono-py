@@ -17,6 +17,7 @@ router = APIRouter(prefix="/api/sessions/{session_id}", tags=["messages"])
 
 def _get_registry() -> SessionRegistry:
     from pi_mono.server.app import get_session_registry
+
     return get_session_registry()
 
 

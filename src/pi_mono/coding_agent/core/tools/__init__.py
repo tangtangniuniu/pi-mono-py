@@ -19,8 +19,10 @@ ALL_TOOLS = [
     create_ls_tool,
 ]
 
+
 def create_all_tools() -> list[AgentTool]:
     return [fn() for fn in ALL_TOOLS]
+
 
 __all__ = [
     "create_all_tools",
