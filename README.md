@@ -25,6 +25,7 @@
 git clone https://github.com/badlogic/pi-mono.git pi-mono-py
 cd pi-mono-py
 uv sync --dev
+cp .env.example .env
 ```
 
 ### 运行
@@ -82,6 +83,30 @@ uv run mypy src/
 ## 配置
 
 项目级配置放在 `.pi/settings.yaml`，全局配置放在 `~/.pi/settings.yaml`。
+
+运行时模型配置优先使用项目根目录的 `.env`。`.env` 已被 `.gitignore` 忽略，`.env.example` 只提供占位字段，真实 key 只应写入本地 `.env`。
+
+```dotenv
+PI_RUNTIME_MODEL_PROVIDER=cliproxyapi
+PI_RUNTIME_MODEL_BASE_URL=http://127.0.0.1:8317/v1
+PI_RUNTIME_MODEL_ID=gpt-5.2
+PI_RUNTIME_MODEL_API_KEY_ENV=CLIPROXYAPI_API_KEY
+CLIPROXYAPI_API_KEY=sk-...
+```
+
+优先级为：显式环境变量（如 `PI_DEFAULT_MODEL`） > 项目 `.env` > 项目 `.pi/settings.yaml` > 用户 `~/.pi/settings.yaml` > 内置默认值。
+
+在启动 `uv run pi` 或 `uv run pi-server` 前，先做一次本地代理连通性检查：
+
+```bash
+set -a
+source .env
+set +a
+curl -sS "${PI_RUNTIME_MODEL_BASE_URL}/chat/completions" \
+  -H "Authorization: Bearer ${CLIPROXYAPI_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d "{\"model\":\"${PI_RUNTIME_MODEL_ID}\",\"messages\":[{\"role\":\"user\",\"content\":\"Reply with OK\"}],\"stream\":false}"
+```
 
 ```yaml
 server:

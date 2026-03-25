@@ -25,6 +25,7 @@ class CustomModelConfig(BaseModel):
     api: str = "openai-completions"
     context_window: int = 128_000
     max_tokens: int = 4096
+    api_key_env: str | None = None
 
     model_config = {"extra": "ignore"}
 
@@ -60,5 +61,6 @@ class Settings(BaseModel):
     compact_threshold: int = 80_000
     theme: str = "default"
     verbose: bool = False
+    runtime_model_id: str | None = None
 
     model_config = {"extra": "ignore"}

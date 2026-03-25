@@ -17,7 +17,14 @@ class ModelResolver:
         self._registry = registry
 
     def resolve(self, requested: str | None, settings: Settings) -> Model:
-        model_id = requested or settings.default_model or DEFAULT_MODEL
+        if requested:
+            model_id = requested
+        elif settings.default_model and settings.default_model != DEFAULT_MODEL:
+            model_id = settings.default_model
+        elif settings.runtime_model_id:
+            model_id = settings.runtime_model_id
+        else:
+            model_id = settings.default_model or DEFAULT_MODEL
 
         model = self._registry.get_model(model_id)
         if model is not None:

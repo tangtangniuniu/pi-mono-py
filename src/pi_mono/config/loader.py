@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any
 import yaml
 from pydantic import ValidationError
 
+from pi_mono.config.dotenv import get_runtime_model_config, runtime_model_to_custom_config
 from pi_mono.config.settings import Settings
 
 if TYPE_CHECKING:
@@ -112,10 +113,21 @@ async def load_settings(
         if project_file.exists():
             merged = _deep_merge(merged, _load_yaml_file(project_file))
 
-    # 3. Environment variable overrides (highest priority)
+    # 3. Project-local .env runtime model configuration
+    runtime_model = get_runtime_model_config(project_dir)
+    if runtime_model is not None:
+        custom = runtime_model_to_custom_config(runtime_model).model_dump(exclude_none=True)
+        models = merged.setdefault("models", {})
+        custom_models = models.setdefault("custom", [])
+        custom_models = [m for m in custom_models if not (isinstance(m, dict) and m.get("id") == custom["id"])]
+        custom_models.append(custom)
+        models["custom"] = custom_models
+        merged["runtime_model_id"] = runtime_model.model_id
+
+    # 4. Environment variable overrides (highest priority)
     merged = _apply_env_overrides(merged)
 
-    # 4. Validate and return
+    # 5. Validate and return
     try:
         return Settings.model_validate(merged)
     except ValidationError as e:

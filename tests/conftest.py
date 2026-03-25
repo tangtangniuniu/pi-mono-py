@@ -139,6 +139,26 @@ class MockLLMProvider:
 # Fixtures
 # ---------------------------------------------------------------------------
 
+@pytest.fixture(autouse=True)
+def clear_runtime_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Isolate tests from repository-local runtime model environment settings."""
+    for key in [
+        "PI_RUNTIME_MODEL_PROVIDER",
+        "PI_RUNTIME_MODEL_BASE_URL",
+        "PI_RUNTIME_MODEL_ID",
+        "PI_RUNTIME_MODEL_API_KEY_ENV",
+        "PI_RUNTIME_MODEL_NAME",
+        "PI_RUNTIME_MODEL_API",
+        "PI_RUNTIME_MODEL_CONTEXT_WINDOW",
+        "PI_RUNTIME_MODEL_MAX_TOKENS",
+        "CLIPROXYAPI_API_KEY",
+        "DOTENV_PROVIDER_API_KEY",
+        "CUSTOM_PROXY_KEY",
+        "EXAMPLE_PROVIDER_API_KEY",
+    ]:
+        monkeypatch.delenv(key, raising=False)
+
+
 @pytest.fixture
 def tmp_config_dir(tmp_path: Path) -> Path:
     """Provide a temporary config directory for tests."""

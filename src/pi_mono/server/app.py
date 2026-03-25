@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -13,9 +13,6 @@ from pi_mono.coding_agent.core.session_manager import SessionManager
 from pi_mono.coding_agent.core.settings_manager import SettingsManager
 from pi_mono.server.schemas import HealthResponse
 from pi_mono.server.session_registry import SessionRegistry
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 # Module-level singletons (set during app creation)
 _session_registry: SessionRegistry | None = None
@@ -46,9 +43,11 @@ def create_app(
     """Create and configure the FastAPI application."""
     global _session_registry, _model_registry, _settings_manager
 
-    _settings_manager = SettingsManager(settings_file=settings_file)
+    project_dir = settings_file.parent if settings_file is not None else Path.cwd()
+    _settings_manager = SettingsManager(settings_file=settings_file, project_dir=project_dir)
     session_manager = SessionManager(sessions_dir=sessions_dir)
     _model_registry = ModelRegistry()
+    _settings_manager.bootstrap_runtime_model(_model_registry)
     _session_registry = SessionRegistry(
         settings_manager=_settings_manager,
         session_manager=session_manager,

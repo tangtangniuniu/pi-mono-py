@@ -52,11 +52,15 @@ The system SHALL calculate token costs for each LLM interaction based on the mod
 - **THEN** the system SHALL return a `Cost` object with accurate dollar amounts calculated from the model's per-million-token rates
 
 ### Requirement: API key management
-The system SHALL resolve API keys from environment variables using configurable variable names per API provider.
+The system SHALL resolve API keys from environment variables using configurable variable names per API provider, including custom OpenAI-compatible providers defined through project-local runtime configuration.
 
 #### Scenario: Environment variable lookup
 - **WHEN** a model's API requires authentication
 - **THEN** the system SHALL look up the API key from the environment variable configured for that API (e.g., `OPENAI_API_KEY`)
+
+#### Scenario: Custom provider key lookup
+- **WHEN** a project-local runtime model is configured for a custom OpenAI-compatible provider
+- **THEN** the system SHALL use the configured environment variable binding for that provider's API key when constructing requests
 
 #### Scenario: Missing API key
 - **WHEN** the required environment variable is not set

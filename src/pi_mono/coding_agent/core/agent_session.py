@@ -62,6 +62,7 @@ class AgentSession:
         thinking_level: str | None = None,
     ) -> None:
         self._settings = await self._settings_manager.load()
+        self._settings_manager.bootstrap_runtime_model(self._model_registry)
 
         # Resolve model
         resolved_model = self._model_resolver.resolve(model, self._settings)

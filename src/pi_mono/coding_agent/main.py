@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
 from rich.console import Console
 from rich.table import Table
@@ -16,7 +17,7 @@ console = Console()
 
 def _create_session() -> AgentSession:
     """Create a new agent session with all dependencies."""
-    settings_manager = SettingsManager()
+    settings_manager = SettingsManager(project_dir=Path.cwd())
     session_manager = SessionManager()
     model_registry = ModelRegistry()
 
@@ -99,7 +100,10 @@ async def run_list_sessions() -> None:
 
 async def run_list_models(provider: str | None = None, search: str | None = None) -> None:
     """List available models."""
+    settings_manager = SettingsManager(project_dir=Path.cwd())
     registry = ModelRegistry()
+    await settings_manager.load()
+    settings_manager.bootstrap_runtime_model(registry)
 
     if search:
         models = registry.search_models(search)

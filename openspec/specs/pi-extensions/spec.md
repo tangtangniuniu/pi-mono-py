@@ -49,27 +49,31 @@ The system SHALL allow extensions to register prompt templates from `.pi/prompts
 - **THEN** the system SHALL raise a `FileNotFoundError` at registration time
 
 ### Requirement: Settings YAML loading
-The system SHALL load configuration from `.pi/settings.yaml` (project-level) and `~/.pi/settings.yaml` (user-level), with project-level settings taking priority over user-level, and environment variables taking highest priority.
+The system SHALL load configuration from project-local `.env`, `.pi/settings.yaml` (project-level), and `~/.pi/settings.yaml` (user-level), with explicit environment variables taking highest priority, `.env` values taking priority over YAML files, and project-level YAML taking priority over user-level YAML.
 
 #### Scenario: Load project settings
-- **WHEN** `.pi/settings.yaml` exists with `default_model: "gpt-4o"`
+- **WHEN** `.pi/settings.yaml` exists with `default_model: "gpt-4o"` and no higher-priority overrides are present
 - **THEN** `settings.default_model` SHALL be `"gpt-4o"`
 
+#### Scenario: Load project-local dotenv values
+- **WHEN** `.env` defines the runtime model configuration and `.pi/settings.yaml` does not override it through explicit environment variables
+- **THEN** the loader SHALL incorporate the `.env` values into the effective project runtime configuration
+
 #### Scenario: Environment variable override
-- **WHEN** `.pi/settings.yaml` has `default_model: "gpt-4o"` and environment variable `PI_DEFAULT_MODEL=gpt-4o-mini` is set
+- **WHEN** `.env` or `.pi/settings.yaml` sets a default model and environment variable `PI_DEFAULT_MODEL=gpt-4o-mini` is set
 - **THEN** `settings.default_model` SHALL be `"gpt-4o-mini"`
 
 #### Scenario: User-level fallback
-- **WHEN** `.pi/settings.yaml` does not specify `default_model` but `~/.pi/settings.yaml` has `default_model: "gpt-4o"`
-- **THEN** `settings.default_model` SHALL be `"gpt-4o"`
+- **WHEN** neither `.env` nor `.pi/settings.yaml` specifies the needed setting but `~/.pi/settings.yaml` does
+- **THEN** the system SHALL use the user-level value
 
 #### Scenario: Missing settings files
-- **WHEN** neither `.pi/settings.yaml` nor `~/.pi/settings.yaml` exists
+- **WHEN** `.env`, `.pi/settings.yaml`, and `~/.pi/settings.yaml` do not exist
 - **THEN** the system SHALL use built-in default values for all settings
 
-#### Scenario: Invalid YAML
-- **WHEN** `.pi/settings.yaml` contains invalid YAML syntax
-- **THEN** the system SHALL raise a clear error with the file path and parse error details
+#### Scenario: Invalid dotenv or YAML
+- **WHEN** `.env` contains malformed runtime model values or `.pi/settings.yaml` contains invalid YAML syntax
+- **THEN** the system SHALL raise a clear error identifying the invalid source and the parse or validation failure
 
 ### Requirement: Settings schema validation
 The system SHALL validate the loaded settings against a Pydantic model, ensuring all values are of the correct type and within valid ranges.
@@ -98,11 +102,15 @@ The system SHALL support saving updated settings back to `.pi/settings.yaml` in 
 - **THEN** only the specified fields SHALL be updated; all other fields SHALL retain their current values
 
 ### Requirement: Custom model configuration in settings
-The system SHALL support defining custom models in `settings.yaml` under a `models` key, each with id, provider, and base_url. Custom models SHALL be registered in the ModelRegistry.
+The system SHALL support defining custom models from committed settings and from project-local `.env` runtime configuration, with each custom model including id, provider, and base_url and being registered in the ModelRegistry.
 
 #### Scenario: Custom model from settings
 - **WHEN** settings.yaml contains a custom model `{id: "local-llama", provider: "ollama", base_url: "http://localhost:11434/v1"}`
 - **THEN** the ModelRegistry SHALL contain a model with id "local-llama" resolvable via ModelResolver
+
+#### Scenario: Custom model from `.env`
+- **WHEN** `.env` contains a valid runtime model definition for a custom OpenAI-compatible endpoint
+- **THEN** the ModelRegistry SHALL contain a custom model generated from that `.env` configuration and resolvable via ModelResolver
 
 ### Requirement: Extension unloading by source
 The system SHALL support unloading all tools and event subscriptions registered by a specific extension, identified by its source path.

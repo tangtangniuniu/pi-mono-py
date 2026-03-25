@@ -70,6 +70,59 @@ class TestEnvironmentVariableOverride:
         s = await load_settings(project_dir=tmp_path, user_dir=tmp_path / "nonexistent")
         assert s.verbose is True
 
+    async def test_runtime_model_env_override_wins_over_dotenv(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        (tmp_path / ".env").write_text(
+            "\n".join(
+                [
+                    "PI_RUNTIME_MODEL_PROVIDER=dotenv-provider",
+                    "PI_RUNTIME_MODEL_BASE_URL=http://127.0.0.1:8317/v1",
+                    "PI_RUNTIME_MODEL_ID=dotenv-model",
+                    "PI_RUNTIME_MODEL_API_KEY_ENV=DOTENV_PROVIDER_API_KEY",
+                    "DOTENV_PROVIDER_API_KEY=sk-dotenv",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        monkeypatch.setenv("PI_RUNTIME_MODEL_ID", "env-model")
+
+        s = await load_settings(project_dir=tmp_path, user_dir=tmp_path / "nonexistent")
+        assert s.runtime_model_id == "env-model"
+        assert any(model.id == "env-model" for model in s.models.custom)
+
+
+class TestDotenvRuntimeModel:
+    async def test_loads_runtime_model_from_dotenv(self, tmp_path: Path) -> None:
+        (tmp_path / ".env").write_text(
+            "\n".join(
+                [
+                    "PI_RUNTIME_MODEL_PROVIDER=cliproxyapi",
+                    "PI_RUNTIME_MODEL_BASE_URL=http://127.0.0.1:8317/v1",
+                    "PI_RUNTIME_MODEL_ID=gpt-5.2",
+                    "PI_RUNTIME_MODEL_API_KEY_ENV=CLIPROXYAPI_API_KEY",
+                    "CLIPROXYAPI_API_KEY=sk-test",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        s = await load_settings(project_dir=tmp_path, user_dir=tmp_path / "nonexistent")
+        assert s.runtime_model_id == "gpt-5.2"
+        assert any(model.id == "gpt-5.2" and model.provider == "cliproxyapi" for model in s.models.custom)
+
+    async def test_invalid_runtime_model_config_raises(self, tmp_path: Path) -> None:
+        (tmp_path / ".env").write_text(
+            "\n".join(
+                [
+                    "PI_RUNTIME_MODEL_PROVIDER=cliproxyapi",
+                    "PI_RUNTIME_MODEL_BASE_URL=http://127.0.0.1:8317/v1",
+                ]
+            ),
+            encoding="utf-8",
+        )
+
+        with pytest.raises(ValueError, match="PI_RUNTIME_MODEL_ID"):
+            await load_settings(project_dir=tmp_path, user_dir=tmp_path / "nonexistent")
+
 
 class TestMissingFiles:
     async def test_both_missing_returns_defaults(self, tmp_path: Path) -> None:

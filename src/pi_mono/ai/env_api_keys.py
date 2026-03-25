@@ -17,13 +17,26 @@ _ENV_KEY_MAP: dict[str, list[str]] = {
 }
 
 
+def register_env_api_key(provider: str, *env_vars: str) -> None:
+    """Register one or more environment variable names for a provider."""
+    normalized = provider.strip().lower()
+    vars_clean = [var for var in env_vars if var]
+    if not vars_clean:
+        return
+    existing = _ENV_KEY_MAP.get(normalized, [])
+    _ENV_KEY_MAP[normalized] = list(dict.fromkeys([*vars_clean, *existing]))
+
+
 def get_env_api_key(provider: str) -> str | None:
     """Return the first non-empty API key found in the environment for *provider*.
 
     Returns ``None`` when the provider is unknown or no matching variable is
     set.
     """
-    for var in _ENV_KEY_MAP.get(provider, []):
+    normalized = provider.strip().lower()
+    fallback_var = f"{normalized.upper().replace('-', '_')}_API_KEY"
+    candidates = [*_ENV_KEY_MAP.get(normalized, []), fallback_var]
+    for var in dict.fromkeys(candidates):
         val = os.environ.get(var)
         if val:
             return val

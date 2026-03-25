@@ -48,6 +48,14 @@ class TestResolve:
         result = resolver.resolve(None, settings)
         assert result.id == "fallback-model"
 
+    def test_runtime_model_is_used_before_builtin_default(self, registry: ModelRegistry, resolver: ModelResolver) -> None:
+        model = make_model(model_id="runtime-model", provider="cliproxyapi")
+        registry.register_custom_model(model)
+        settings = Settings(default_model="claude-sonnet-4-20250514", runtime_model_id="runtime-model")
+
+        result = resolver.resolve(None, settings)
+        assert result.id == "runtime-model"
+
     def test_not_found_raises_value_error(self, resolver: ModelResolver) -> None:
         settings = Settings(default_model="nonexistent")
         with pytest.raises(ValueError, match="Model not found"):
